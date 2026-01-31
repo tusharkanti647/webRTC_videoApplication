@@ -1,0 +1,121 @@
+{
+  "info": {
+    "_postman_id": "b7c5b2f2-9e7e-4c71-9c35-6d72c8c2b901",
+    "name": "User Auth API - Port 8000",
+    "description": "Postman collection for testing user authentication APIs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Sign Up (Register)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Tushar Das\",\n  \"email\": \"tushar@test.com\",\n  \"password\": \"123456\",\n  \"reyTypePassword\": \"123456\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8000/userApi/signUp",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["userApi", "signUp"]
+        }
+      }
+    },
+    {
+      "name": "Sign In (Login)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"tushar@test.com\",\n  \"password\": \"123456\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8000/userApi/signIn",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["userApi", "signIn"]
+        }
+      }
+    },
+    {
+      "name": "Google Sign In",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"googleToken\": \"PASTE_GOOGLE_ID_TOKEN_HERE\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8000/userApi/googleSignIn",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["userApi", "googleSignIn"]
+        }
+      }
+    },
+    {
+      "name": "Auth Check (Protected)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8000/userApi/authCheck",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["userApi", "authCheck"]
+        }
+      }
+    },
+    {
+      "name": "Logout",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8000/userApi/signOut",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["userApi", "signOut"]
+        }
+      }
+    },
+    {
+      "name": "Set Test Cookie",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8000/set-cookie",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["set-cookie"]
+        }
+      }
+    }
+  ]
+}
