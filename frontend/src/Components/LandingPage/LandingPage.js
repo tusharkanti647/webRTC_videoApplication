@@ -16,6 +16,7 @@ export default function LandingPage() {
     const [meetingCode, setMeetingCode] = useState("");
     const [isShowCreateRome, setIsShowCreateRome] = useState(false);
     const [emailValue, setEmailValue] = useState('')
+    const [romeValue, setRomeValue] = useState('')
     const [inviteEmails, setInviteEmails] = useState([])
     const [romeDetails, setRomeDetails] = useState({ romeId: '', joinUrl: '' }
     )
@@ -26,6 +27,7 @@ export default function LandingPage() {
 
     //join a video call
     const handleJoinVideoCall = () => {
+        console.log('HHHHHHHHHH123')
         socket.emit('check-rome', { romeId: meetingCode })
     }
 
@@ -85,6 +87,7 @@ export default function LandingPage() {
                 "http://localhost:8000/roomsApi/create",
                 {
                     inviteEmails: inviteEmails,
+                    romeName: romeValue,
                 },
                 {
                     withCredentials: true,
@@ -188,14 +191,20 @@ export default function LandingPage() {
             <div className="landingMainContainer">
                 <div>
                     <h1>
-                        <span style={{ color: "#007bff" }}>Connect</span> with your loved
-                        once
+                        <span style={{ color: "#007bff" }}>Video</span> meetings made simple
                     </h1>
-                    <p>Cover a distance by Video Call App</p>
+                    <p>Connect teams and collaborate from anywhere</p>
                     <div style={{ width: '100%', display: 'flex', justifyContent: "space-around", alignItems: 'center' }}>
                         {isShowCreateRome ? <>
                             <div>
                                 <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                                    <TextField
+                                        onChange={(e) => setRomeValue(e.target.value)}
+                                        id="outlined-basic"
+                                        label="Enter Rome Name"
+                                        variant="outlined"
+                                        value={romeValue}
+                                    />
                                     <TextField
                                         onChange={(e) => setEmailValue(e.target.value)}
                                         id="outlined-basic"
@@ -213,9 +222,9 @@ export default function LandingPage() {
                                 </div>
                             </div>
                             <div>
-                                <div role="button" onClick={handelGenerateLink}>
+                                <Button role="button" sx={{ height: '45px' }} onClick={handelGenerateLink} variant="contained">
                                     Generate Link
-                                </div>
+                                </Button>
 
 
                             </div>
@@ -224,16 +233,17 @@ export default function LandingPage() {
 
                                 {isAuthenticated == 'NotAuthenticated' ? <div role="button">
                                     <Link to={"/SignIn"}>Login</Link>
-                                </div> : <div
+                                </div> : <Button
                                     onClick={() => setIsShowCreateRome(true)}
-                                    role="button"
+                                    variant="contained"
+                                    className="createRomeBtn"
                                 >
                                     <p>Create a Rome</p>
-                                </div>}
+                                </Button>}
 
                                 {/* rome joining  section*/}
                                 <div>
-                                    <h2>Join a rome</h2>
+                                    <h4>Join a rome</h4>
 
                                     <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
                                         <TextField
@@ -253,19 +263,16 @@ export default function LandingPage() {
 
 
                     {/* show the romeid and joinurl */}
-                    <div style={{ fontSize: '15px', }}>
-                        {romeDetails?.joinUrl && <div
-                            style={{ color: "white", fontSize: '20px', width: '100px', textAlign: 'center', cursor: 'pointer' }}
-
-
-                            onClick={() => {
+                    <div style={{ fontSize: '15px', marginTop: '20px' }}>
+                        {romeDetails?.joinUrl &&
+                            <Button onClick={() => {
                                 console.log('MMMM', process.env.REACT_APP_BASE_LINK)
                                 navigate(`/join/${romeDetails.romeId}`)
                             }}
-                            role="button"
-                        >
-                            <p>Join</p>
-                        </div>}
+                                variant="contained">
+                                Join
+                            </Button>
+                        }
                         {romeDetails?.romeId && <p>RomeId: {romeDetails?.romeId}</p>}
                         {romeDetails?.joinUrl && <p>JoinUrl: {romeDetails?.joinUrl}</p>}
                     </div>

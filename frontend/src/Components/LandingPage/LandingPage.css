@@ -56,3 +56,11 @@
   height: 70vh;
   width: auto;
 }
+
+.createRomeBtn {
+  height: 60px;
+  width: 200px;
+}
+.createRomeBtn p {
+  font-size: 20px;
+}

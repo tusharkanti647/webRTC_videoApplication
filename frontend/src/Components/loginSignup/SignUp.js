@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import './SignUp.css';
 import { useLocation, useNavigate } from 'react-router';
-import axios from 'axios';
 import GoogleSignInBtn from './GoogleSignInBtn';
-import Cookies from 'js-cookie';
+
 
 
 function SignUp() {
@@ -17,8 +16,6 @@ function SignUp() {
     });
 
 
-
-    // console.log('XXXXXXXXX', getCookie('JWTToken'))
 
     const [errors, setErrors] = useState({});
     const navigate = useNavigate();
@@ -106,54 +103,19 @@ function SignUp() {
             // }
         } else {
             const newErrors = {};
-
             if (!formData.password.trim())
                 newErrors.password = "Password is required.";
             if (!formData.email.trim()) newErrors.email = "Email is required.";
 
             setErrors(newErrors);
-
-            // if (Object.keys(newErrors).length === 0) {
-            //     console.log("Form submitted successfully", formData);
-            // }
             await postRequest(process.env.REACT_APP_API_HOST + '/userApi/signIn')
 
         }
     };
 
-    // const data1 = {
-    //     name: "John Doe",
-    //     email: "johndoe@example.com",
-    //     age: 25
-    // };
-    // const handelcoocki = async () => {
-    //     // let response = await fetch('http://localhost:8000/set-cookie', {
-    //     //     method: "GET",
-    //     //     credentials: "include", // Include cookies in the request
-    //     // })
-    //     let response = await fetch('http://localhost:8000/set-cookie', {
-    //         method: "POST", // HTTP method
-    //         headers: {
-    //             "Content-Type": "application/json", // Inform the server about the data format
-    //         },
-    //         body: JSON.stringify(data1), // Convert the JavaScript object to JSON
-    //         credentials: "include",
-    //     })
 
-    //     // let data = response.json()
 
-    //     // console.log(data.message)
-    //     // axios
-    //     //     .get("http://localhost:8000/set-cookie", {
-    //     //         withCredentials: true, // Include cookies in the request
-    //     //     })
-    //     //     .then((response) => {
-    //     //         console.log(response.data.message); // Confirm cookie is set
-    //     //     })
-    //     //     .catch((error) => {
-    //     //         console.error("Error setting cookie:", error);
-    //     //     });
-    // }
+  
 
     return (<div className='signUpDiv'>
         <div className='centerStyle signUpDivInner'>

@@ -1,3 +1,12 @@
+.userNameEnterDiv {
+  margin-top: 20vh;
+  /* height: 50vh; */
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .meetVideoContainer {
   position: relative;
   height: 100vh;
