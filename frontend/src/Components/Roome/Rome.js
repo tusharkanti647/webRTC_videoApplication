@@ -556,6 +556,23 @@ export default function VideoMeetComponent() {
         }
     };
 
+    // mute the user (host action) - asks backend to emit force-mute to target socket
+    const handleMuteUser = async (videoObj) => {
+        try {
+            const res = await axios.post(
+                `${process.env.REACT_APP_API_HOST}/roomsApi/mute/${romeId}`,
+                { socketId: videoObj.socketId },
+                { withCredentials: true }
+            );
+
+            console.log("MUTE SUCCESS:", res.data);
+            alert('User muted successfully');
+        } catch (error) {
+            alert('Mute user failed');
+            console.error("MUTE FAILED:", error.response?.data || error.message);
+        }
+    };
+
     //response host force kick
     const handelUserForceKick = ({ reason }) => {
         console.log(reason);
@@ -566,13 +583,35 @@ export default function VideoMeetComponent() {
         //     peerConnection = null;
         // }
 
-        localStream?.getTracks().forEach(track => track.stop());
+        window.localStream?.getTracks().forEach(track => track.stop());
 
         // Disconnect socket
         socket.disconnect();
 
 
-        navigate("/");
+        routeTo("/");
+    }
+
+    // response from server telling this client to mute audio (host forced)
+    const handleForceMute = (payload) => {
+        try {
+            // disable local audio tracks
+            const tracks = localVideoref.current?.srcObject?.getAudioTracks() || [];
+            tracks.forEach((t) => (t.enabled = false));
+            setAudio(false);
+            alert(payload?.reason || 'You have been muted by the host');
+        } catch (e) {
+            console.error('Error applying force mute', e);
+        }
+    }
+
+    // update participant info (audio/video state) sent from server
+    const handleParticipantUpdated = ({ socketId, audioEnabled, videoEnabled }) => {
+        setVideos((videos) => {
+            return videos.map((v) =>
+                v.socketId === socketId ? { ...v, audioEnabled, videoEnabled } : v
+            );
+        });
     }
 
     //socket events
@@ -583,6 +622,8 @@ export default function VideoMeetComponent() {
             socket.on("user-left", socketUserLeftResponse);
             socket.on("user-joined", socketUserJoinedResponse);
             socket.on("force-kick", handelUserForceKick);
+            socket.on("force-mute", handleForceMute);
+            socket.on("participant-updated", handleParticipantUpdated);
         }
 
         return (() => {
@@ -591,6 +632,8 @@ export default function VideoMeetComponent() {
                 socket.off("user-left", socketUserLeftResponse);
                 socket.off("user-joined", socketUserJoinedResponse);
                 socket.off("force-kick", handelUserForceKick);
+                socket.off("force-mute", handleForceMute);
+                socket.off("participant-updated", handleParticipantUpdated);
             }
         })
     }, [socket?.connected])
@@ -697,7 +740,7 @@ export default function VideoMeetComponent() {
                                 </button>}
 
                                 {isOpenManu === video.socketId && <div className={styles.videoManuDiv}>
-                                    <p>Mute</p>
+                                    <p onClick={() => handleMuteUser(video)}>Mute</p>
                                     <p onClick={() => handleKickUser(video)}>Remove</p>
                                 </div>}
                                 {video.stream ? <video
