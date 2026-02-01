@@ -8,9 +8,9 @@ import { useSocket } from "../../socket/SocketProvider";
 
 export default function LandingPage() {
     let navigate = useNavigate();
-    var socketRef = useRef();
-    socketRef.current = useSocket()
-    console.log(socketRef.current)
+
+    const socket = useSocket()
+
 
     const [isAuthenticated, setIsAuthenticated] = useState('loading')
     const [meetingCode, setMeetingCode] = useState("");
@@ -20,17 +20,13 @@ export default function LandingPage() {
     const [romeDetails, setRomeDetails] = useState({ romeId: '', joinUrl: '' }
     )
 
-    //socket connection
-    const socketConnect = () => {
 
-        //  socketRef.current = io.connect(process.env.REACT_APP_API_HOST, { secure: false });
-    }
 
 
 
     //join a video call
     const handleJoinVideoCall = () => {
-        navigate(`/join/${meetingCode}`);
+        socket.emit('check-rome', { romeId: meetingCode })
     }
 
     //check is user is login or not
@@ -51,6 +47,7 @@ export default function LandingPage() {
                 if (response.status == '200') {
                     if (data.authenticated) {
                         setIsAuthenticated('authenticated');
+                        sessionStorage.setItem('userId', data.user)
                     } else {
                         setIsAuthenticated('NotAuthenticated');
                     }
@@ -117,7 +114,27 @@ export default function LandingPage() {
         }
     };
 
+    //socket all events
+    useEffect(() => {
+        console.log('HHHHHH123', socket)
+        const isRomePresent = (data) => {
+            console.log('KKKKKK', data)
+            if (data.status) {
+                navigate(`/join/${meetingCode}`);
+            } else {
+                alert('This rome is not live now.')
+            }
+        }
+        if (socket) {
+            socket.on('check-rome', isRomePresent)
+        }
 
+        return (() => {
+            if (socket) {
+                socket.off('check-rome', isRomePresent)
+            }
+        })
+    }, [socket, meetingCode])
 
     //screen show the loading
     if (isAuthenticated == 'loading') {

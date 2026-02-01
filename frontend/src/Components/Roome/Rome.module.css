@@ -29,12 +29,11 @@
 
   padding: 10px;
   gap: 10px;
-
 }
 
-.conferenceView  video {
+.conferenceView video {
   width: 20vw;
-  height: 20vh;
+  /* height: 20vh; */
   min-width: 20vw;
   border-radius: 10px;
 }
@@ -57,4 +56,50 @@
 .chattingArea {
   position: absolute;
   bottom: 0;
+}
+.videoDiv {
+  position: relative;
+}
+.video3dot {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  cursor: pointer;
+  z-index: 1;
+}
+.videoManuDiv {
+  position: absolute;
+  right: 30px;
+  top: 30px;
+  background-color: #3c3c3c;
+
+  display: flex;
+  flex-direction: column;
+
+  border-radius: 5px;
+  color: white;
+  z-index: 1;
+}
+.videoManuDiv p {
+  padding: 7px;
+}
+.videoManuDiv p:hover {
+  cursor: pointer;
+  border-radius: 5px;
+  background-color: #333333;
+}
+.videoWrapper {
+  border: 1px solid white;
+  height: 20vh;
+  aspect-ratio: 4 / 3;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.videoUserName {
+  width: 100%;
+  color: white;
+  text-align: center;
 }

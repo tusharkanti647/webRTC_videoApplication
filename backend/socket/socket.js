@@ -41,6 +41,7 @@ export function initSocket1(io) {
 */
 
 import roomModel from "../models/room.model.js";
+import { disconnectSocket } from "./socketManager.js";
 
 let connections = {};
 // let messages = {};
@@ -48,28 +49,91 @@ let connections = {};
 
 //it validet whatevr the romeId send by frontend it is created or not
 //present in data base check if not present then not connect the socket
-const checkRomeIsCreated = async (romeId) => {
+const checkRomeIsCreated = async (romeId,) => {
     try {
-        const room = await roomModel.findById(romeId);
-        if (!room) return {
+        const rome = await roomModel.findById(romeId);
+
+        if (!rome) return {
             status: false,
             message: 'rome is not created now'
         };
 
+
         return {
             status: true,
-            message: 'rome is not created'
+            message: 'rome is created',
+            rome,
         };
+
     } catch (e) {
-        throw new Error('e.message')
+        throw new Error(e.message)
     }
 }
+
+
+
+
 
 export function initSocket(io) {
     io.on("connection", (socket) => {
         console.log("SOMETHING CONNECTED");
 
-        socket.on("join-call", (data) => {
+        socket.on("check-rome", async (data) => {
+            try {
+
+                if (!data?.romeId) {
+                    io.to(socket.id).emit(
+                        "check-rome",
+                        {
+                            status: false,
+                            socketId: socket.id,
+                            message: 'Required a romeId 333444',
+                            romeId: ''
+                        }
+                    );
+
+                    return
+                }
+                let fl = await checkRomeIsCreated(data.romeId)
+                //return the frontend this is not connect rome is not present
+                if (!fl.status) {
+                    io.to(socket.id).emit(
+                        "check-rome",
+                        {
+                            fl,
+                            status: false,
+                            socketId: socket.id,
+                            message: 'This romeId is not created now',
+                            romeId: data.romeId
+                        }
+                    );
+                } else {
+                    io.to(socket.id).emit(
+                        "check-rome",
+                        {
+                            status: true,
+                            socketId: socket.id,
+                            message: 'This romeId is present',
+                        }
+                    )
+                }
+
+
+            } catch (e) {
+                console.log('ERROR', e)
+                io.to(socket.id).emit(
+                    "check-rome",
+                    {
+                        status: false,
+                        socketId: socket.id,
+                        message: e.message,
+
+                    }
+                );
+            }
+        });
+
+        socket.on("join-call", async (data) => {
             console.log('LLLLLL')
             try {
                 if (!data?.romeId) {
@@ -82,11 +146,15 @@ export function initSocket(io) {
                             romeId: ''
                         }
                     );
+
+                    return
                 }
-                console.log('UUUUUU', data, socket.id)
+
 
                 //return the frontend this is not connect rome is not present
-                if (!checkRomeIsCreated(data.romeId).status) {
+                let fl = await checkRomeIsCreated(data.romeId, true)
+                console.log('XXXXXXXX', fl)
+                if (!fl.status) {
                     io.to(socket.id).emit(
                         "user-joined",
                         {
@@ -96,37 +164,33 @@ export function initSocket(io) {
                             romeId: data.romeId
                         }
                     );
+
+                    return
                 }
 
-                if (connections[data.romeId] === undefined) {
-                    connections[data.romeId] = [];
-                }
-                connections[data.romeId].push(socket.id);
+                // if (connections[data.romeId] === undefined) {
+                //     connections[data.romeId] = [];
+                // }
 
-                //   timeOnline[socket.id] = new Date();
+                // connections[data.romeId]
+                fl.rome.participants.push({
+                    socketId: socket.id, userName: data.userName,
+                    hostId: fl.rome?.hostId ?? '', audioEnabled: true, videoEnabled: true, isHost: fl.rome?.hostId === data.userId
+                });
+                await fl.rome.save()
 
 
-                console.log('CCCCCC', connections[data.romeId])
-                for (let a = 0; a < connections[data.romeId].length; a++) {
-                    io.to(connections[data.romeId][a]).emit(
+                for (let a = 0; a < fl.rome.participants.length; a++) {
+                    io.to(fl.rome.participants[a].socketId).emit(
                         "user-joined", {
                         status: true,
                         newJoinSocketId: socket.id,
-                        connectionsSocketIds: connections[data.romeId]
+                        connectionsSocketIds: fl.rome.participants
                     }
                     );
                 }
 
-                //   if (messages[path] !== undefined) {
-                //     for (let a = 0; a < messages[path].length; ++a) {
-                //       io.to(socket.id).emit(
-                //         "chat-message",
-                //         messages[path][a]["data"],
-                //         messages[path][a]["sender"],
-                //         messages[path][a]["socket-id-sender"]
-                //       );
-                //     }
-                //   }
+
             } catch (e) {
                 console.log('ERROR', e)
                 io.to(socket.id).emit(
@@ -142,67 +206,62 @@ export function initSocket(io) {
         });
 
         socket.on("signal", (toId, message) => {
+            // console.log(socket.id, 'PPPPPPPP', toId, message)
             io.to(toId).emit("signal", socket.id, message);
         });
 
-        // socket.on("chat-message", (data, sender) => {
-        //   const [matchingRoom, found] = Object.entries(connections).reduce(
-        //     ([room, isFound], [roomKey, roomValue]) => {
-        //       if (!isFound && roomValue.includes(socket.id)) {
-        //         return [roomKey, true];
-        //       }
+        socket.on('disconnect', (reason) => {
+            console.log('User disconnected:', socket.id);
+            console.log('Reason:', reason);
+        });
 
-        //       return [room, isFound];
-        //     },
-        //     ["", false]
-        //   );
-
-        //   if (found === true) {
-        //     if (messages[matchingRoom] === undefined) {
-        //       messages[matchingRoom] = [];
-        //     }
-
-        //     messages[matchingRoom].push({
-        //       sender: sender,
-        //       data: data,
-        //       "socket-id-sender": socket.id,
-        //     });
-        //     console.log("message", matchingRoom, ":", sender, data);
-
-        //     connections[matchingRoom].forEach((elem) => {
-        //       io.to(elem).emit("chat-message", data, sender, socket.id);
-        //     });
-        //   }
-        // });
-
-        socket.on("disconnect", () => {
+        socket.on("disconnect", async () => {
             //   var diffTime = Math.abs(timeOnline[socket.id] - new Date());
 
-            var key;
+            // var key;
 
-            for (const [k, v] of JSON.parse(
-                JSON.stringify(Object.entries(connections))
-            )) {
-                for (let a = 0; a < v.length; ++a) {
-                    if (v[a] === socket.id) {
-                        key = k;
+            // for (const [k, v] of JSON.parse(
+            //     JSON.stringify(Object.entries(connections))
+            // )) {
+            //     for (let a = 0; a < v.length; ++a) {
+            //         if (v[a].socketId === socket.id) {
+            //             key = k;
 
-                        for (let a = 0; a < connections[key].length; ++a) {
-                            io.to(connections[key][a]).emit("user-left", socket.id);
-                        }
+            //             var index // = connections[key].indexOf(socket.id);
+            //             for (let a = 0; a < connections[key].length; ++a) {
+            //                 io.to(connections[key][a].socketId).emit("user-left", socket.id);
+            //                 index = a
+            //             }
 
-                        var index = connections[key].indexOf(socket.id);
 
-                        connections[key].splice(index, 1);
 
-                        if (connections[key].length === 0) {
-                            delete connections[key];
-                        }
-                    }
-                }
+            //             connections[key].splice(index, 1);
+
+            //             if (connections[key].length === 0) {
+            //                 delete connections[key];
+            //             }
+            //         }
+            //     }
+            // }
+
+            const room = await roomModel.findOneAndUpdate(
+                { "participants.socketId": socket.id },
+                { $pull: { participants: { socketId: socket.id } } },
+                { new: true }
+            );
+
+            if (room) {
+                // io.to(room._id.toString()).emit("room-updated", room.participants);
+                room.participants.map((ele) => {
+                    io.to(ele.socketId).emit("user-left", socket.id);
+                })
             }
+
+            disconnectSocket(socket.id)
         });
     });
+
+
 }
 
 //697dd63365838c93fccd3e9a

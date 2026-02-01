@@ -4,6 +4,7 @@ import Room from "../models/room.model.js";
 import { nanoid } from "nanoid";
 import { sendInviteEmail } from "../utils/email.js";
 import { getIO, disconnectSocket, emitToSocket } from "../socket/socketManager.js";
+import roomModel from "../models/room.model.js";
 
 
 
@@ -38,8 +39,9 @@ export async function hostMute(req, res) {
     const { socketId } = req.body;
     const room = await Room.findById(id);
     if (!room) return res.status(404).json({ error: "room not found" });
-    if (!req.user || String(req.user.id) !== String(room.hostId))
-        return res.status(403).json({ error: "not host" });
+
+    const hostId = req?.id; //this host user id
+    if (!hostId) return res.status(401).json({ error: "not authenticated" });
     // emit force-mute to socket
     try {
         emitToSocket(socketId, "force-mute");
@@ -52,13 +54,25 @@ export async function hostMute(req, res) {
 export async function hostKick(req, res) {
     const { id } = req.params; // room id
     const { socketId } = req.body;
-    const room = await Room.findById(id);
+
+
+
+    const hostId = req?.id; //this host user id
+    if (!hostId) return res.status(401).json({ error: "not authenticated" });
+
+    const room = await roomModel.findOneAndUpdate(
+        { _id: id },
+        { $pull: { participants: { socketId } } },
+        { new: true }
+    );
     if (!room) return res.status(404).json({ error: "room not found" });
-    if (!req.user || String(req.user.id) !== String(room.hostId))
-        return res.status(403).json({ error: "not host" });
+
     try {
         disconnectSocket(socketId);
-        res.json({ ok: true });
+        res.status(200).json({
+            success: true,
+            message: "PARTICIPANT REMOVED SUCCESSFULLY"
+        });
     } catch (err) {
         res.status(500).json({ error: "cannot kick" });
     }
