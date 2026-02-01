@@ -7,33 +7,6 @@ import { getIO, disconnectSocket, emitToSocket } from "../socket/socketManager.j
 import roomModel from "../models/room.model.js";
 
 
-
-// export async function createInvite(req, res) {
-//   const { id } = req.params;
-//   const { emails } = req.body;
-//   const room = await Room.findById(id);
-//   if (!room) return res.status(404).json({ error: "room not found" });
-//   // check host
-//   if (!req.user || String(req.user.id) !== String(room.hostId))
-//     return res.status(403).json({ error: "not host" });
-//   const tokens = [];
-//   if (Array.isArray(emails)) {
-//     for (const email of emails) {
-//       const token = nanoid(10);
-//       const invite = await Invite.create({
-//         token,
-//         roomId: room._id,
-//         email,
-//         expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
-//       });
-//       const joinUrl = `${process.env.FRONTEND_BASE_URL || "http://localhost:3000"}/room/${room._id}?invite=${token}`;
-//       sendInviteEmail(email, { joinUrl, name: room.name });
-//       tokens.push({ email, token, joinUrl });
-//     }
-//   }
-//   res.json({ tokens });
-// }
-
 export async function hostMute(req, res) {
     const { id } = req.params; // room id
     const { socketId } = req.body;
@@ -114,6 +87,16 @@ export async function hostKick(req, res) {
             success: true,
             message: "PARTICIPANT REMOVED SUCCESSFULLY"
         });
+
+        // notify all participants about the change so UI can update
+        const updatedRoom = await roomModel.findById(id);
+        if (updatedRoom) {
+            updatedRoom.participants.forEach((p) => {
+                emitToSocket(p.socketId, "kick-user-byHost", {
+                    socketId,
+                });
+            });
+        }
     } catch (err) {
         res.status(500).json({ error: "cannot kick" });
     }

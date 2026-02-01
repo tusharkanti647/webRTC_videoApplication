@@ -17,17 +17,24 @@ it return to forontend romeId, joinUrl, hostedId
 */
 export async function createRoom(req, res) {
 
-    const { inviteEmails } = req.body;
+    const { inviteEmails, romeName } = req.body;
     try {
         const hostId = req?.id; //this host user id
         if (!hostId) return res.status(401).json({ error: "not authenticated" });
-        const room = await Room.create({ hostId });
+
+        if (!romeName || !romeName.trim()) {
+            return res.status(400).json({
+                error: "Room name is required",
+            });
+        }
+
+        const room = await Room.create({ hostId, romeName });
         const joinUrl = `${process.env.FRONTEND_BASE_URL || "http://localhost:3000"}/join/${room._id}`;
 
         // optionally send emails
         if (Array.isArray(inviteEmails)) {
             inviteEmails.forEach((email) =>
-                sendInviteEmail(email, { joinUrl, name: 'name tu' }),
+                sendInviteEmail(email, { joinUrl, name: romeName }),
             );
         }
         res.json({ romeId: room._id, joinUrl, hostId });

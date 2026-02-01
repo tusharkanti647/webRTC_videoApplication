@@ -19,5 +19,7 @@ export function disconnectSocket(socketId) {
 
 export function emitToSocket(socketId, event, payload) {
   if (!io) return;
+
+  console.log('oooooooo',socketId, event, payload)
   io.to(socketId).emit(event, payload);
 }

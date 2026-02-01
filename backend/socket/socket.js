@@ -1,51 +1,9 @@
 
-/*
-export function initSocket1(io) {
-    io.on("connection", (socket) => {
-        console.log("socket connected", socket.id);
-
-        socket.on("join-room", ({ roomId, email, name }) => {
-            console.log('JJJJJJ', roomId, email, name)
-            socket.join(roomId);
-            // socket.to(roomId).emit("user-joined", { socketId: socket.id, email, name });
-            io.to(roomId).emit("new-user-joined", { socketId: socket.id, roomId, email, name });
-            io.to(socket.id).emit("user-joined", { socketId: socket.id, roomId, email, name });
-        });
-
-        socket.on("signal", ({ to, data }) => {
-            io.to(to).emit("signal", { from: socket.id, data });
-        });
-
-        socket.on("media-state", ({ roomId, audioEnabled, videoEnabled }) => {
-            socket
-                .to(roomId)
-                .emit("peer-media-state", {
-                    userId: socket.id,
-                    audioEnabled,
-                    videoEnabled,
-                });
-        });
-
-        socket.on("leave-room", ({ roomId, userId }) => {
-            socket.leave(roomId);
-            socket.to(roomId).emit("user-left", { userId, socketId: socket.id });
-        });
-
-        socket.on("disconnect", () => {
-            console.log("socket disconnected", socket.id);
-            io.emit("peer-disconnected", { socketId: socket.id });
-        });
-    });
-}
-
-*/
 
 import roomModel from "../models/room.model.js";
 import { disconnectSocket } from "./socketManager.js";
 
-let connections = {};
-// let messages = {};
-// let timeOnline = {};
+
 
 //it validet whatevr the romeId send by frontend it is created or not
 //present in data base check if not present then not connect the socket
@@ -152,7 +110,7 @@ export function initSocket(io) {
 
 
                 //return the frontend this is not connect rome is not present
-                let fl = await checkRomeIsCreated(data.romeId, true)
+                let fl = await checkRomeIsCreated(data.romeId,)
                 console.log('XXXXXXXX', fl)
                 if (!fl.status) {
                     io.to(socket.id).emit(
@@ -168,14 +126,12 @@ export function initSocket(io) {
                     return
                 }
 
-                // if (connections[data.romeId] === undefined) {
-                //     connections[data.romeId] = [];
-                // }
 
-                // connections[data.romeId]
+                let isHost = fl.rome?.hostId === data.userId
+                console.log('KKKKKKKKJJJJJ', isHost, data.userId)
                 fl.rome.participants.push({
                     socketId: socket.id, userName: data.userName,
-                    hostId: fl.rome?.hostId ?? '', audioEnabled: true, videoEnabled: true, isHost: fl.rome?.hostId === data.userId
+                    hostId: fl.rome?.hostId ?? '', audioEnabled: true, videoEnabled: true, isHost
                 });
                 await fl.rome.save()
 
@@ -205,45 +161,244 @@ export function initSocket(io) {
             }
         });
 
-        socket.on("signal", (toId, message) => {
+        socket.on("signal", (toId, message, data) => {
             // console.log(socket.id, 'PPPPPPPP', toId, message)
-            io.to(toId).emit("signal", socket.id, message);
+            io.to(toId).emit("signal", socket.id, message, data);
         });
 
-        socket.on('disconnect', (reason) => {
-            console.log('User disconnected:', socket.id);
-            console.log('Reason:', reason);
+        socket.on("leave-room", async ({ roomId, userId }) => {
+            const room = await roomModel.findOneAndUpdate(
+                { "participants.socketId": socket.id },
+                { $pull: { participants: { socketId: socket.id } } },
+                { new: true }
+            );
+
+            if (room) {
+                room.participants.map((ele) => {
+                    io.to(ele.socketId).emit("user-left", socket.id);
+                })
+            }
         });
+
+        //user muted by host
+        socket.on('host-user-mute', async (data) => {
+            try {
+                let fl = await checkRomeIsCreated(data.romeId,)
+                console.log('XXXXXXXX', fl)
+                if (!fl.status) {
+                    io.to(socket.id).emit(
+                        "host-user-mute",
+                        {
+                            status: false,
+                            socketId: socket.id,
+                            message: 'This romeId is not created now',
+                            romeId: data.romeId
+                        }
+                    );
+
+                    return
+                }
+
+                await roomModel.updateOne(
+                    {
+                        _id: fl.rome._id,
+                        "participants.socketId": data.socketId
+                    },
+                    {
+                        $set: {
+                            "participants.$.audioEnabled": data.audioEnabled
+                        }
+                    }
+                );
+
+                //send back to the host that current user muted now
+                io.to(socket.id).emit(
+                    "host-user-mute",
+                    {
+                        status: true,
+                        socketId: socket.id,
+                        mutedSocketId: data.socketId,
+                        audioEnabled: data.audioEnabled,
+                        message: 'audio track change now',
+                        romeId: data.romeId
+                    }
+                );
+
+                //send back to the muted user that he muted by host
+                io.to(data.socketId).emit(
+                    "host-by-user-mute",
+                    {
+                        status: true,
+                        socketId: socket.id,
+                        mutedSocketId: data.socketId,
+                        audioEnabled: data.audioEnabled,
+                        message: 'your audio track change now',
+                        romeId: data.romeId
+                    }
+                );
+
+                if (fl.rome) {
+                    fl.rome.participants.map((ele) => {
+                        if (data.socketId !== ele.socketId && socket.id !== ele.socketId)
+                            io.to(ele.socketId).emit("remote-user-mute", {
+                                socketId: socket.id,
+                                mutedSocketId: data.socketId,
+                                audioEnabled: data.audioEnabled,
+                                message: 'host change the user audio track',
+                            });
+                    })
+                }
+
+            } catch (e) {
+                io.to(socket.id).emit(
+                    "host-user-mute",
+                    {
+                        status: false,
+                        socketId: socket.id,
+                        message: e.message,
+                        romeId: data.romeId
+                    }
+                );
+            }
+        })
+
+
+        //user itself mute
+        socket.on('user-mute', async (data) => {
+            try {
+                let fl = await checkRomeIsCreated(data.romeId,)
+                console.log('XXXXXXXX', fl)
+                if (!fl.status) {
+                    io.to(socket.id).emit(
+                        "user-mute",
+                        {
+                            status: false,
+                            socketId: socket.id,
+                            message: 'This romeId is not created now',
+                            romeId: data.romeId
+                        }
+                    );
+
+                    return
+                }
+
+                await roomModel.updateOne(
+                    {
+                        _id: fl.rome._id,
+                        "participants.socketId": socket.id
+                    },
+                    {
+                        $set: {
+                            "participants.$.audioEnabled": data.audioEnabled
+                        }
+                    }
+                );
+
+                io.to(socket.id).emit(
+                    "user-mute",
+                    {
+                        status: true,
+                        socketId: socket.id,
+                        message: 'audio track change now',
+                        romeId: data.romeId,
+                        audioEnabled: data.audioEnabled
+                    }
+                );
+
+                if (fl.rome) {
+                    fl.rome.participants.map((ele) => {
+                        if (socket.id !== ele.socketId)
+                            io.to(ele.socketId).emit("remote-user-mute", {
+                                status: true,
+                                mutedSocketId: socket.id,
+                                message: 'audio track change now',
+                                romeId: data.romeId,
+                                audioEnabled: data.audioEnabled
+                            });
+                    })
+                }
+
+            } catch (e) {
+                io.to(socket.id).emit(
+                    "user-mute",
+                    {
+                        status: false,
+                        socketId: socket.id,
+                        message: e.message,
+                        romeId: data.romeId
+                    }
+                );
+            }
+        })
+
+        socket.on('user-videoOff', async (data) => {
+            try {
+                let fl = await checkRomeIsCreated(data.romeId,)
+                console.log('XXXXXXXX', fl)
+                if (!fl.status) {
+                    io.to(socket.id).emit(
+                        "user-videoOff",
+                        {
+                            status: false,
+                            socketId: socket.id,
+                            message: 'This romeId is not created now',
+                            romeId: data.romeId
+                        }
+                    );
+
+                    return
+                }
+
+                await roomModel.updateOne(
+                    {
+                        _id: fl.rome._id,
+                        "participants.socketId": socket.id
+                    },
+                    {
+                        $set: {
+                            "participants.$.videoEnabled": data.videoEnabled
+                        }
+                    }
+                );
+
+                io.to(socket.id).emit(
+                    "user-videoOff",
+                    {
+                        status: true,
+                        socketId: socket.id,
+                        message: 'video track change now',
+                        romeId: data.romeId,
+                        videoEnabled: data.videoEnabled
+                    }
+                );
+
+                if (fl.rome) {
+                    fl.rome.participants.map((ele) => {
+                        if (socket.id !== ele.socketId)
+                            io.to(ele.socketId).emit("remote-user-videoOff", {
+                                status: true,
+                                videoOffSocketId: socket.id,
+                                message: 'video track change now',
+                                romeId: data.romeId,
+                                videoEnabled: data.videoEnabled
+                            });
+                    })
+                }
+
+            } catch (e) {
+                io.to(socket.id).emit(
+                    "user-videoOff",
+                    {
+                        status: false,
+                        socketId: socket.id,
+                        message: e.message,
+                        romeId: data.romeId
+                    }
+                );
+            }
+        })
 
         socket.on("disconnect", async () => {
-            //   var diffTime = Math.abs(timeOnline[socket.id] - new Date());
-
-            // var key;
-
-            // for (const [k, v] of JSON.parse(
-            //     JSON.stringify(Object.entries(connections))
-            // )) {
-            //     for (let a = 0; a < v.length; ++a) {
-            //         if (v[a].socketId === socket.id) {
-            //             key = k;
-
-            //             var index // = connections[key].indexOf(socket.id);
-            //             for (let a = 0; a < connections[key].length; ++a) {
-            //                 io.to(connections[key][a].socketId).emit("user-left", socket.id);
-            //                 index = a
-            //             }
-
-
-
-            //             connections[key].splice(index, 1);
-
-            //             if (connections[key].length === 0) {
-            //                 delete connections[key];
-            //             }
-            //         }
-            //     }
-            // }
-
             const room = await roomModel.findOneAndUpdate(
                 { "participants.socketId": socket.id },
                 { $pull: { participants: { socketId: socket.id } } },
@@ -264,4 +419,4 @@ export function initSocket(io) {
 
 }
 
-//697dd63365838c93fccd3e9a
+//697f077ea40f5d7ead684e1b

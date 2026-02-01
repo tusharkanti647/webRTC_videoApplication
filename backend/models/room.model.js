@@ -12,6 +12,7 @@ const ParticipantSchema = new Schema({
 
 const RoomSchema = new Schema({
     // romeId: { type: String, required: true },
+    romeName:{ type: String, required: true },
     hostId: { type: String, required: true },
     participants: { type: [ParticipantSchema], default: [] },
     createdAt: { type: Date, default: Date.now },
