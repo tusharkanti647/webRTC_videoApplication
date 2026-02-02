@@ -26,6 +26,7 @@ function SignUp() {
         setErrors({ ...errors, [e.target.name]: "" });
     };
 
+    // send backend post request signup or sign in valitation
     const postRequest = async (url) => {
         try {
 
@@ -64,6 +65,7 @@ function SignUp() {
         }
     }
 
+    // on submit the user login or sign up form handel
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -113,9 +115,6 @@ function SignUp() {
         }
     };
 
-
-
-  
 
     return (<div className='signUpDiv'>
         <div className='centerStyle signUpDivInner'>
@@ -189,7 +188,7 @@ function SignUp() {
 
             {errors.generalError && <span className="error-message">{errors.generalError}</span>}
 
-            {/* <button onClick={handelcoocki}>coocki</button> */}
+
             <GoogleSignInBtn setErrors={setErrors} />
 
             {isSignIn ? <div className='signUpLink' onClick={() => navigate('/SignUp')}>

@@ -17,12 +17,10 @@ function App() {
         <Route path='/SignUp' element={<SignUp />} />
         <Route path='/SignIn' element={<SignUp />} />
 
-
-
         <Route path="/" element={<LandingPage />} />
         <Route path="/join/:romeId" element={<VideoMeetComponent />} />
-        <Route path='*' element={<NoteFoundPage />} />
 
+        <Route path='*' element={<NoteFoundPage />} />
       </Routes>
 
     </div>

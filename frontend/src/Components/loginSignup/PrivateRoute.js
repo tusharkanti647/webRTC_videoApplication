@@ -4,7 +4,7 @@ import Cookies from 'js-cookie';
 
 const PrivateRoute = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState('loading')
-    // const [isServerError, setIsServerError] = useState(false)
+
 
     useEffect(() => {
 

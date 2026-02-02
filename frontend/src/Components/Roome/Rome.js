@@ -34,7 +34,6 @@ export default function VideoMeetComponent() {
 
     const peersRef = useRef({});        // { socketId: RTCPeerConnection }
     const localStreamRef = useRef(null);
-    const videosRef = useRef([])
 
     /* ---------------------------- STATE ------------------------------- */
 
@@ -149,10 +148,8 @@ export default function VideoMeetComponent() {
      */
     const handleUserJoined = (data) => {
         if (!data.status) return;
-        console.log('HHHHHHHHH', data)
         data.connectionsSocketIds.forEach(
             ({ socketId, userName, isHost, hostId, audioEnabled, videoEnabled, }) => {
-                console.log(socket.id, 'XXXXXXXXXXX123', socketId, userName, isHost)
                 if (socketId === socket.id) {
                     setCurrentUserHost(() => (isHost === true || isHost === "true") ? true : false);
                     return;
@@ -164,23 +161,6 @@ export default function VideoMeetComponent() {
                     createAndSendOffer({ peer, remoteSocketId: socketId, userName, hostId, audioEnabled, videoEnabled });
                 }
 
-                // let videoExists = videosRef.current.find(
-                //     (v) => v.socketId === socketId
-                // );
-
-
-                // if (videoExists) {
-                //     // Update the stream of the existing video
-                //     setVideos((prev) => {
-                //         const updatedVideos = prev.map((v) =>
-                //             v.socketId === socketId
-                //                 ? { ...v, stream: null }
-                //                 : v
-                //         );
-                //         videosRef.current = updatedVideos;
-                //         return updatedVideos;
-                //     });
-                // } else
 
                 if (socketId === data.newJoinSocketId) {
                     setVideos((prev) => {
@@ -189,7 +169,6 @@ export default function VideoMeetComponent() {
                             ...prev,
                             { socketId, userName, hostId, audioEnabled, videoEnabled, stream: null },
                         ]
-                        videosRef.current = updatedVideo
                         return updatedVideo
                     });
                 }
@@ -197,21 +176,6 @@ export default function VideoMeetComponent() {
         );
     };
 
-    /**
-     * User left room
-     */
-    const handleUserLeft = (socketId) => {
-        peersRef.current[socketId]?.close();
-        delete peersRef.current[socketId];
-
-        setVideos((prev) => {
-            let updatedVideos = prev.filter((v) => v.socketId !== socketId)
-
-            videosRef.current = updatedVideos
-            return updatedVideos
-        }
-        );
-    };
 
     /**
  * Completely remove a remote user:
@@ -237,7 +201,6 @@ export default function VideoMeetComponent() {
             }
             let updatedVideos = prev.filter((v) => v.socketId !== socketId);
 
-            videosRef.current = updatedVideos
             return updatedVideos
         });
     };
@@ -256,7 +219,6 @@ export default function VideoMeetComponent() {
 
         // Clear UI
         setVideos([]);
-        videosRef.current = []
 
         // Disconnect socket
         socket.disconnect();
@@ -268,10 +230,7 @@ export default function VideoMeetComponent() {
     /* ---------------------- after force kick any user this event cam all other user to remove the video kick user ----------------------------- */
     const handelKickUserByHost = (data) => {
         setVideos((v) => {
-
             v.filter(video => video.socketId !== data.socketId)
-            // videosRef.current = updatedVideos
-            // return updatedVideos
         })
     }
 
@@ -287,12 +246,10 @@ export default function VideoMeetComponent() {
                 let updatedVideos1 = prev.map((v) =>
                     v.socketId === socketId ? { ...v, stream } : v
                 );
-                videosRef.current = updatedVideos1
                 return updatedVideos1
             }
             let updatedVideos = [...prev, { socketId, socketId, userName, hostId, audioEnabled, videoEnabled, stream }];
 
-            videosRef.current = updatedVideos
             return updatedVideos
         });
     };
@@ -348,7 +305,6 @@ export default function VideoMeetComponent() {
 
     //response cam user is muted  when host mute the user
     const responseHostUsrMute = (data) => {
-        console.log('XXXXXXX67 responseHostUsrMute', data)
         if (data.status) {
             setVideos((v) => v.map(item =>
                 item.socketId === data.mutedSocketId
@@ -373,7 +329,6 @@ export default function VideoMeetComponent() {
 
     //response cam for remote user is muted now
     const responseRemoteUserMuted = (data) => {
-        console.log('XXXXXXX67 responseRemoteUserMuted', data)
         setVideos((v) => v.map(item =>
             item.socketId === data.mutedSocketId
                 ? { ...item, audioEnabled: data.audioEnabled }
@@ -393,13 +348,15 @@ export default function VideoMeetComponent() {
 
             alert('Audio track change successfully')
         } else {
-            alert('Audio track change fail')
+            if (data.message === 'muted by host') {
+                alert('You are muted by host and cannot unmute yourself')
+
+            } else alert('Audio track change fail')
         }
     }
 
     //const user itself video off response
     const responseUserVideoOff = (data) => {
-        console.log('XXXXXXXXXXXX responseUserVideoOff', data)
         if (data.status) {
 
             localStreamRef.current
@@ -416,7 +373,6 @@ export default function VideoMeetComponent() {
 
     //remote user itself video off response
     const responseRemoteUserVideOff = (data) => {
-        console.log('XXXXXXXXXXXX responseRemoteUserVideOff', data)
         setVideos((v) => v.map(item =>
             item.socketId === data.videoOffSocketId
                 ? { ...item, videoEnabled: data.videoEnabled }
@@ -427,20 +383,6 @@ export default function VideoMeetComponent() {
     /* ------------------------------------------------------------------ */
     /* -------------------------- CLEANUP -------------------------------- */
     /* ------------------------------------------------------------------ */
-
-    const cleanup = () => {
-        Object.values(peersRef.current).forEach((p) => p.close());
-        peersRef.current = {};
-
-        localStreamRef.current?.getTracks().forEach((t) => t.stop());
-        localStreamRef.current = null;
-    };
-
-    // const handleEndCall = () => {
-    //     cleanup();
-    //     socket.disconnect();
-    //     navigate("/");
-    // };
 
     const handleEndCall = () => {
         // Stop local tracks
@@ -453,7 +395,6 @@ export default function VideoMeetComponent() {
 
         // Clear UI
         setVideos([]);
-        videosRef.current = []
 
         // Inform server (IMPORTANT)
         socket.emit("leave-room", { romeId });
@@ -484,7 +425,7 @@ export default function VideoMeetComponent() {
     };
 
     /* ------------------------------------------------------------------ */
-    /* -------------------------- SOCKET HOOK ---------------------------- */
+    /* -------------------------- SOCKET ALL Events ---------------------------- */
     /* ------------------------------------------------------------------ */
 
     useEffect(() => {
@@ -566,6 +507,7 @@ export default function VideoMeetComponent() {
                         </IconButton>
                     </div>
 
+                    {/* ------------------ local usr video ui -------------------- */}
                     <video
                         className={styles.meetUserVideo}
                         ref={localVideoRef}
@@ -573,26 +515,32 @@ export default function VideoMeetComponent() {
                         muted
                     />
 
+                    {/* ------------------ rome connected each user video ui -------------------- */}
                     <div className={styles.conferenceView}>
                         {videos.map((v) => (
                             <div key={v.socketId} className={styles.videoDiv}>
-                                {console.log('MMMMMMMM', currentUserHost)}
+
                                 {currentUserHost && <button className={styles.video3dot} onClick={() => handelOpenMenu(v)}>
                                     <MoreVertIcon className={styles.video3dot} sx={{ fontSize: '40', bgcolor: 'gray' }} />
                                 </button>}
+
+                                {!v.audioEnabled && <MicOffIcon className={currentUserHost ? styles.audioMuteHost : styles.audioMute} sx={{ color: 'balck', fontSize: '40', bgcolor: 'gray' }} />}
 
                                 {isOpenMenu === v.socketId && <div className={styles.videoManuDiv}>
                                     <p onClick={() => handelMuteUser(v)}>{v.audioEnabled ? 'Mute' : 'Unmute'}</p>
                                     <p onClick={() => handleKickUser(v)}>Remove</p>
                                 </div>}
 
-                                {v.stream ? (
+                                {v.videoEnabled ? (
                                     <video
                                         autoPlay
+                                        muted={v.audioEnabled}
                                         ref={(ref) => ref && (ref.srcObject = v.stream)}
                                     />
                                 ) : (
-                                    <Avatar>{v.userName?.[0]}</Avatar>
+                                    <div className={styles.videoWrapper}>
+                                        <Avatar>{v.userName?.[0]}</Avatar>
+                                    </div>
                                 )}
                                 <p className={styles.videoUserName}>{v.userName}</p>
                             </div>

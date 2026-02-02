@@ -2,6 +2,10 @@
 
 import nodemailer from "nodemailer";
 
+// Function to send an invite email to a user
+// `to`        -> receiver email address
+// `joinUrl`   -> meeting / room link user will join
+// `name`      -> name of the rome
 export async function sendInviteEmail(to, { joinUrl, name }) {
   try {
     const transporter = nodemailer.createTransport({

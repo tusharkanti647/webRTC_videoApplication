@@ -4,6 +4,7 @@ const ParticipantSchema = new Schema({
     socketId: { type: String },
     userId: { type: String },
     userName: { type: String },
+    isHostMuted:{type: Boolean, default:false},
     audioEnabled: { type: Boolean, default: true },
     videoEnabled: { type: Boolean, default: true },
     hostId: { type: String, required: true },

@@ -5,8 +5,12 @@ import { disconnectSocket } from "./socketManager.js";
 
 
 
-//it validet whatevr the romeId send by frontend it is created or not
-//present in data base check if not present then not connect the socket
+/* ------------------------------------------------------------------
+   Helper Function
+   ------------------------------------------------------------------
+   Validates whether the roomId sent from frontend exists in database.
+   If room does not exist → socket should not be allowed to join.
+-------------------------------------------------------------------*/
 const checkRomeIsCreated = async (romeId,) => {
     try {
         const rome = await roomModel.findById(romeId);
@@ -29,13 +33,23 @@ const checkRomeIsCreated = async (romeId,) => {
 }
 
 
-
-
-
+/* ------------------------------------------------------------------
+   Socket Initialization
+   ------------------------------------------------------------------
+   This function initializes all socket.io events.
+   It runs once when socket server starts.
+-------------------------------------------------------------------*/
 export function initSocket(io) {
     io.on("connection", (socket) => {
         console.log("SOMETHING CONNECTED");
 
+        /* --------------------------------------------------------------
+           CHECK ROOM EVENT
+           --------------------------------------------------------------
+           - Verifies whether the given roomId exists
+           - Frontend sends { romeId }
+           - Returns status true/false
+        ---------------------------------------------------------------*/
         socket.on("check-rome", async (data) => {
             try {
 
@@ -91,8 +105,15 @@ export function initSocket(io) {
             }
         });
 
+        /* --------------------------------------------------------------
+        JOIN CALL EVENT
+        --------------------------------------------------------------
+        - User joins the room
+        - Adds participant to DB
+        - Notifies all existing participants
+       - Frontend sends { romeId, userId,userName }
+     ---------------------------------------------------------------*/
         socket.on("join-call", async (data) => {
-            console.log('LLLLLL')
             try {
                 if (!data?.romeId) {
                     io.to(socket.id).emit(
@@ -127,6 +148,7 @@ export function initSocket(io) {
                 }
 
 
+                // Add user to participants list
                 let isHost = fl.rome?.hostId === data.userId
                 console.log('KKKKKKKKJJJJJ', isHost, data.userId)
                 fl.rome.participants.push({
@@ -161,11 +183,24 @@ export function initSocket(io) {
             }
         });
 
+        /* --------------------------------------------------------------
+           WEBRTC SIGNAL EVENT
+           --------------------------------------------------------------
+           - Used for exchanging WebRTC offer/answer/ICE candidates
+           - Sends signaling data to a specific peer
+        ---------------------------------------------------------------*/
         socket.on("signal", (toId, message, data) => {
-            // console.log(socket.id, 'PPPPPPPP', toId, message)
             io.to(toId).emit("signal", socket.id, message, data);
         });
 
+
+        /* --------------------------------------------------------------
+          LEAVE ROOM EVENT
+          --------------------------------------------------------------
+          - Triggered when user explicitly leaves room
+          - Removes user from DB
+          - Notifies remaining participants
+       ---------------------------------------------------------------*/
         socket.on("leave-room", async ({ roomId, userId }) => {
             const room = await roomModel.findOneAndUpdate(
                 { "participants.socketId": socket.id },
@@ -180,7 +215,14 @@ export function initSocket(io) {
             }
         });
 
-        //user muted by host
+
+        /* --------------------------------------------------------------
+           HOST MUTES USER
+           --------------------------------------------------------------
+           - Host can mute any participant
+           - Updates DB
+           - Notifies host, muted user, and other participants
+        ---------------------------------------------------------------*/
         socket.on('host-user-mute', async (data) => {
             try {
                 let fl = await checkRomeIsCreated(data.romeId,)
@@ -206,12 +248,13 @@ export function initSocket(io) {
                     },
                     {
                         $set: {
-                            "participants.$.audioEnabled": data.audioEnabled
+                            "participants.$.audioEnabled": data.audioEnabled,
+                            "participants.$.isHostMuted": !data.audioEnabled
                         }
                     }
                 );
 
-                //send back to the host that current user muted now
+                // Notify host
                 io.to(socket.id).emit(
                     "host-user-mute",
                     {
@@ -224,7 +267,7 @@ export function initSocket(io) {
                     }
                 );
 
-                //send back to the muted user that he muted by host
+                // Notify muted user
                 io.to(data.socketId).emit(
                     "host-by-user-mute",
                     {
@@ -237,6 +280,8 @@ export function initSocket(io) {
                     }
                 );
 
+
+                // Notify other users
                 if (fl.rome) {
                     fl.rome.participants.map((ele) => {
                         if (data.socketId !== ele.socketId && socket.id !== ele.socketId)
@@ -263,11 +308,16 @@ export function initSocket(io) {
         })
 
 
-        //user itself mute
+ /* ------------------------------------------------------------------
+   USER MUTE EVENT
+   ------------------------------------------------------------------
+   - Triggered when a user mutes/unmutes their own microphone
+   - User CANNOT unmute if host has muted them
+   - Updates DB and notifies all participants
+-------------------------------------------------------------------*/
         socket.on('user-mute', async (data) => {
             try {
                 let fl = await checkRomeIsCreated(data.romeId,)
-                console.log('XXXXXXXX', fl)
                 if (!fl.status) {
                     io.to(socket.id).emit(
                         "user-mute",
@@ -282,6 +332,23 @@ export function initSocket(io) {
                     return
                 }
 
+                const participant = fl.rome.participants.find(p => p.socketId === socket.id);
+
+                //  If host has muted this user and the user tries to unmute,
+                //  block the action and notify the user.
+                if (participant.isHostMuted && data.audioEnabled === true) {
+                    // User is trying to enable audio but host muted them
+                    io.to(socket.id).emit("user-mute", {
+                        status: false,
+                        socketId: socket.id,
+                        message: 'muted by host',
+                        romeId: data.romeId,
+                        audioEnabled: participant.audioEnabled
+                    });
+                    return
+                }
+
+                 // Update user's video state in database
                 await roomModel.updateOne(
                     {
                         _id: fl.rome._id,
@@ -331,10 +398,17 @@ export function initSocket(io) {
             }
         })
 
+
+/* ------------------------------------------------------------------
+   USER VIDEO ON / OFF EVENT
+   ------------------------------------------------------------------
+   - Triggered when a user turns their camera on or off
+   - Updates DB and notifies all participants
+-------------------------------------------------------------------*/
         socket.on('user-videoOff', async (data) => {
             try {
                 let fl = await checkRomeIsCreated(data.romeId,)
-                console.log('XXXXXXXX', fl)
+
                 if (!fl.status) {
                     io.to(socket.id).emit(
                         "user-videoOff",
@@ -349,7 +423,9 @@ export function initSocket(io) {
                     return
                 }
 
-                await roomModel.updateOne(
+
+
+                let result = await roomModel.updateOne(
                     {
                         _id: fl.rome._id,
                         "participants.socketId": socket.id
@@ -360,6 +436,7 @@ export function initSocket(io) {
                         }
                     }
                 );
+                console.log("UPDATE RESULT:", result);
 
                 io.to(socket.id).emit(
                     "user-videoOff",
@@ -398,6 +475,13 @@ export function initSocket(io) {
             }
         })
 
+        /* --------------------------------------------------------------
+          SOCKET DISCONNECT EVENT
+          --------------------------------------------------------------
+          - Triggered when socket disconnects (refresh / close tab)
+          - Cleans DB
+          - Notifies remaining users
+       ---------------------------------------------------------------*/
         socket.on("disconnect", async () => {
             const room = await roomModel.findOneAndUpdate(
                 { "participants.socketId": socket.id },
@@ -406,7 +490,6 @@ export function initSocket(io) {
             );
 
             if (room) {
-                // io.to(room._id.toString()).emit("room-updated", room.participants);
                 room.participants.map((ele) => {
                     io.to(ele.socketId).emit("user-left", socket.id);
                 })

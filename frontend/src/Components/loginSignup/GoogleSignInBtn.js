@@ -22,10 +22,6 @@ function GoogleSignInBtn({ setErrors }) {
             if (response.status == '200') {
                 let userData = data.user;
                 navigate('/')
-                // setFormData({
-                //     email: "",
-                //     password: "",
-                // })
             } else if (response.status == '500') {
                 setErrors({ generalError: "Internal Server Error." })
             }

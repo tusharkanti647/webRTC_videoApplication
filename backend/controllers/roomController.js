@@ -1,10 +1,7 @@
 
 import Room from "../models/room.model.js";
 import { sendInviteEmail } from "../utils/email.js";
-// import { nanoid } from "nanoid";
-// import { sendInviteEmail } from "../utils/email";
 
-// import { AuthRequest } from "../middleware/auth";
 
 
 /*

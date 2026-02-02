@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { connectSocket } from "./socket";
 
 
-
+// custom hook for get the socket connection
 export const useSocket = () => {
   const [socket, setSocket] = useState(null);
 
@@ -12,12 +12,9 @@ export const useSocket = () => {
     const newSocket = connectSocket();
     setSocket(newSocket);
 
-    // return () => {
-    //   disconnectSocket();
-    //   setSocket(null);
-    // };
+ 
   }, []);
-  // console.log("MMMMMMMMMMMMMMM socket", socket);
+ 
   return socket;
 };
 
