@@ -14,6 +14,7 @@ The application is structured as a **monorepo** with separate frontend and backe
 
 ## 📁 Project Structure
 
+```
 webRTC_videoApplication/
 │
 ├── docker-compose.yml
@@ -29,7 +30,7 @@ webRTC_videoApplication/
 │ ├── package.json
 │ ├── index.js
 │ └── README.md
-
+```
 
 
 ---

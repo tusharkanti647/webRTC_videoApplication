@@ -29,7 +29,7 @@ The application supports email/password login, Google OAuth authentication, and 
 1. **Clone the repository**
 
 ```bash
-git clone <https://github.com/tusharkanti647/webRTC_videoApplication.git >
+git clone https://github.com/tusharkanti647/webRTC_videoApplication.git
 cd frontend
 ```
 

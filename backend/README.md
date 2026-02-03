@@ -68,7 +68,7 @@ This backend is built with Node.js, Express, MongoDB, and integrates smoothly wi
 1. **Clone the repository**
 
 ```bash
-git clone <https://github.com/tusharkanti647/webRTC_videoApplication.git >
+git clone https://github.com/tusharkanti647/webRTC_videoApplication.git
 cd backend
 ```
 
