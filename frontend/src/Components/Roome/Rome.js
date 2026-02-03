@@ -147,7 +147,10 @@ export default function VideoMeetComponent() {
      * When users join room
      */
     const handleUserJoined = (data) => {
-        if (!data.status) return;
+        if (!data.status) {
+            alert('this rome is not live now')
+            return
+        }
         data.connectionsSocketIds.forEach(
             ({ socketId, userName, isHost, hostId, audioEnabled, videoEnabled, }) => {
                 if (socketId === socket.id) {

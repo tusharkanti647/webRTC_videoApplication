@@ -117,6 +117,36 @@ export default function LandingPage() {
         }
     };
 
+    //handel user logout
+    const handelLogOut = async () => {
+        let url = process.env.REACT_APP_API_HOST + '/userApi/signOut';
+        try {
+            const response = await fetch(url, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                credentials: "include",
+            });
+
+            const data = await response.json();
+            console.log(data);
+            if (response.status == '200') {
+                navigate('/SignIn')
+            } else if (response.status == '500') {
+                alert('Internal Server Error. please try again.')
+            } else {
+                alert('something went wrong. please try again.')
+
+            }
+
+
+        } catch (e) {
+            console.log('ERROR', e)
+
+        }
+    }
+
     //socket all events
     useEffect(() => {
         console.log('HHHHHH123', socket)
@@ -177,14 +207,21 @@ export default function LandingPage() {
                 <div className="navList">
 
 
-                    <div
+                    {isAuthenticated == 'NotAuthenticated' ? <div
                         onClick={() => {
                             navigate("/SignUp");
                         }}
                         role="button"
                     >
                         <p>SignUp</p>
-                    </div>
+                    </div> : <div
+                        onClick={() => {
+                            handelLogOut()
+                        }}
+                        role="button"
+                    >
+                        <p>Logout</p>
+                    </div>}
                 </div>
             </nav>
 
