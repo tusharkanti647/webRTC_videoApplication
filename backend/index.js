@@ -1,50 +1,238 @@
-
-
 import http from "http";
-import cookieParser from 'cookie-parser';
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import connectDb from './utils/db.js';
+import path from "path";
+import { fileURLToPath } from "url";
+
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import helmet from "helmet";
+import compression from "compression";
+import cookieParser from "cookie-parser";
+
+import { Server } from "socket.io";
+
+import connectDb from "./db/db.js";
+import redisClient from "./db/redis.js";
 
 import userRoute from "./routes/userRoutes.js";
-import roomsRoute from './routes/romeRoutes.js'
-import { Server } from 'socket.io';
-import { setIO } from './socket/socketManager.js';
-import { initSocket } from './socket/socket.js';
+import roomsRoute from "./routes/romeRoutes.js";
 
+import { setIO } from "./socket/socketManager.js";
+import { initSocket } from "./socket/socket.js";
+import { rateLimiter } from "./middlewares/tokenBucketLimiter.js";
 
-dotenv.config({});
+dotenv.config();
+
+// ================= VALIDATE ENV =================
+
+const requiredEnv = [
+  "PORT",
+  "FRONTEND_BASE_URL",
+  "REDIS_HOST",
+  "REDIS_PORT",
+  // "REDIS_PASSWORD",
+];
+
+for (const key of requiredEnv) {
+  if (!process.env[key]) {
+    console.error(`Missing ENV Variable: ${key}`);
+    process.exit(1);
+  }
+}
+
+// ================= EXPRESS APP =================
 
 const app = express();
 
-// middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-const corsOptions = {
-  origin: ['http://localhost:3000',], 
-  credentials: true,
-}
-app.use(cors(corsOptions));
+// const __filename = fileURLToPath(import.meta.url);
+// console.log('JJJJJ', __filename)
+// const __dirname = path.dirname(__filename);
 
+// ================= SECURITY =================
+
+// Hide express fingerprint
+app.disable("x-powered-by");
+
+// Secure headers
+app.use(helmet());
+
+// ================= PERFORMANCE =================
+
+// Compress response
+app.use(compression());
+
+// ================= BODY PARSER =================
+
+// Limit payload size against attacks
+app.use(express.json({ limit: "1mb" }));
+
+app.use(express.urlencoded({
+  extended: true,
+  limit: "1mb",
+}));
+
+app.use(cookieParser());
+
+// ================= CORS =================
+
+const allowedOrigins = [
+  process.env.FRONTEND_BASE_URL,
+];
+
+app.use(
+  cors({
+    origin(origin, callback) {
+
+      // allow mobile apps/postman
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("CORS blocked"));
+    },
+
+    credentials: true,
+  })
+);
+
+
+//=============== rate limitar ==============
+
+app.use(rateLimiter)
+
+// ================= API ROUTES =================
 
 app.use("/userApi", userRoute);
 app.use("/roomsApi", roomsRoute);
 
-const PORT = process.env.PORT || 8000
+// ================= STATIC FILES =================
 
+// const buildPath = path.join(__dirname, "build");
+
+// app.use(express.static(buildPath, {
+//   maxAge: "7d",
+// }));
+
+// ================= HEALTH CHECK =================
+
+app.get("/health", async (req, res) => {
+  try {
+
+    await redisClient.ping();
+
+    res.status(200).json({
+      status: "ok",
+      redis: "connected",
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      status: "error",
+    });
+
+  }
+
+});
+
+// ================= REACT FALLBACK =================
+
+// app.get("*", (req, res) => {
+//   res.sendFile(path.join(buildPath, "index.html"));
+// });
+
+// ================= HTTP SERVER =================
 
 const server = http.createServer(app);
 
+// ================= SOCKET IO =================
+
 const io = new Server(server, {
-  cors: { origin: process.env.FRONTEND_BASE_URL || "*" },
+
+  cors: {
+    origin: allowedOrigins,
+    credentials: true,
+  },
+
+  transports: ["websocket"],
+
+  pingTimeout: 60000,
+
+  pingInterval: 25000,
+
 });
 
 setIO(io);
+
 initSocket(io);
 
-server.listen(PORT, () => {
-  connectDb();
-  console.log(`Backend listening on ${PORT}`);
-});
+// ================= START SERVER =================
+
+const PORT = Number(process.env.PORT);
+
+async function startServer() {
+
+  try {
+
+    // MongoDB
+    await connectDb();
+
+    console.log("MongoDB Connected");
+
+    // Redis
+    await redisClient.connect();
+
+    console.log("Redis Connected");
+
+    // Start server
+    server.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+
+  } catch (error) {
+
+    console.error("Startup Error:", error);
+
+    process.exit(1);
+
+  }
+
+}
+
+startServer();
+
+// ================= GRACEFUL SHUTDOWN =================
+
+async function gracefulShutdown(signal) {
+
+  console.log(`${signal} received`);
+
+  try {
+
+    await redisClient.quit();
+
+    server.close(() => {
+
+      console.log("HTTP Server Closed");
+
+      process.exit(0);
+
+    });
+
+  } catch (error) {
+
+    console.error("Shutdown Error:", error);
+
+    process.exit(1);
+
+  }
+
+}
+
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));

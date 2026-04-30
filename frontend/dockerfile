@@ -25,14 +25,39 @@
 # COPY . .
 # CMD ["npm", "start"]
 
-FROM node:24
+FROM node:24-alpine AS base
 
-# WORKDIR /app
+WORKDIR /app
 
 COPY package*.json ./
+
+# ======================
+# Development
+# ======================
+FROM base AS development
 
 RUN npm install
 
 COPY . .
+
 EXPOSE 3000
+
 CMD ["npm", "start"]
+
+
+# ======================
+# Production
+# ======================
+FROM base AS production
+
+RUN npm ci
+
+COPY . .
+
+RUN npm run build
+
+RUN npm install -g serve
+
+EXPOSE 3000
+
+CMD ["serve", "-s", "build", "-l", "3000"]

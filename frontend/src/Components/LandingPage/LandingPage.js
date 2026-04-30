@@ -82,9 +82,11 @@ export default function LandingPage() {
     //only login user can generate the link
     const handelGenerateLink = async () => {
         try {
+            let myUrl =process.env.REACT_APP_API_HOST + "/roomsApi/create"
 
             const response = await axios.post(
-                "http://localhost:8000/roomsApi/create",
+                myUrl,
+                // "http://localhost:8000/roomsApi/create",
                 {
                     inviteEmails: inviteEmails,
                     romeName: romeValue,
