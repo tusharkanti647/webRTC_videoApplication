@@ -1,13 +1,10 @@
-import { Router } from "express";
-
+import { Router } from 'express';
 
 import { createRoom } from '../controllers/roomController.js';
 import isAuthenticated from '../middlewares/authenticated.js';
-import { hostKick, hostMute } from "../controllers/hostController.js";
-
+import { hostKick, hostMute } from '../controllers/hostController.js';
 
 const router = Router();
-
 
 router.route('/create/').post(isAuthenticated, createRoom);
 router.route('/mute/:id').post(isAuthenticated, hostMute);

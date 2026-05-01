@@ -1,35 +1,35 @@
-import http from "http";
-import path from "path";
-import { fileURLToPath } from "url";
+import http from 'http';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import helmet from "helmet";
-import compression from "compression";
-import cookieParser from "cookie-parser";
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import helmet from 'helmet';
+import compression from 'compression';
+import cookieParser from 'cookie-parser';
 
-import { Server } from "socket.io";
+import { Server } from 'socket.io';
 
-import connectDb from "./db/db.js";
-import redisClient from "./db/redis.js";
+import connectDb from './db/db.js';
+import redisClient from './db/redis.js';
 
-import userRoute from "./routes/userRoutes.js";
-import roomsRoute from "./routes/romeRoutes.js";
+import userRoute from './routes/userRoutes.js';
+import roomsRoute from './routes/romeRoutes.js';
 
-import { setIO } from "./socket/socketManager.js";
-import { initSocket } from "./socket/socket.js";
-import { rateLimiter } from "./middlewares/tokenBucketLimiter.js";
+import { setIO } from './socket/socketManager.js';
+import { initSocket } from './socket/socket.js';
+import { rateLimiter } from './middlewares/tokenBucketLimiter.js';
 
 dotenv.config();
 
 // ================= VALIDATE ENV =================
 
 const requiredEnv = [
-  "PORT",
-  "FRONTEND_BASE_URL",
-  "REDIS_HOST",
-  "REDIS_PORT",
+  'PORT',
+  'FRONTEND_BASE_URL',
+  'REDIS_HOST',
+  'REDIS_PORT',
   // "REDIS_PASSWORD",
 ];
 
@@ -51,7 +51,7 @@ const app = express();
 // ================= SECURITY =================
 
 // Hide express fingerprint
-app.disable("x-powered-by");
+app.disable('x-powered-by');
 
 // Secure headers
 app.use(helmet());
@@ -64,25 +64,24 @@ app.use(compression());
 // ================= BODY PARSER =================
 
 // Limit payload size against attacks
-app.use(express.json({ limit: "1mb" }));
+app.use(express.json({ limit: '1mb' }));
 
-app.use(express.urlencoded({
-  extended: true,
-  limit: "1mb",
-}));
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: '1mb',
+  }),
+);
 
 app.use(cookieParser());
 
 // ================= CORS =================
 
-const allowedOrigins = [
-  process.env.FRONTEND_BASE_URL,
-];
+const allowedOrigins = [process.env.FRONTEND_BASE_URL];
 
 app.use(
   cors({
     origin(origin, callback) {
-
       // allow mobile apps/postman
       if (!origin) {
         return callback(null, true);
@@ -92,22 +91,21 @@ app.use(
         return callback(null, true);
       }
 
-      return callback(new Error("CORS blocked"));
+      return callback(new Error('CORS blocked'));
     },
 
     credentials: true,
-  })
+  }),
 );
-
 
 //=============== rate limitar ==============
 
-app.use(rateLimiter)
+app.use(rateLimiter);
 
 // ================= API ROUTES =================
 
-app.use("/userApi", userRoute);
-app.use("/roomsApi", roomsRoute);
+app.use('/userApi', userRoute);
+app.use('/roomsApi', roomsRoute);
 
 // ================= STATIC FILES =================
 
@@ -119,24 +117,19 @@ app.use("/roomsApi", roomsRoute);
 
 // ================= HEALTH CHECK =================
 
-app.get("/health", async (req, res) => {
+app.get('/health', async (req, res) => {
   try {
-
     await redisClient.ping();
 
     res.status(200).json({
-      status: "ok",
-      redis: "connected",
+      status: 'ok',
+      redis: 'connected',
     });
-
   } catch (error) {
-
     res.status(500).json({
-      status: "error",
+      status: 'error',
     });
-
   }
-
 });
 
 // ================= REACT FALLBACK =================
@@ -152,18 +145,16 @@ const server = http.createServer(app);
 // ================= SOCKET IO =================
 
 const io = new Server(server, {
-
   cors: {
     origin: allowedOrigins,
     credentials: true,
   },
 
-  transports: ["websocket"],
+  transports: ['websocket'],
 
   pingTimeout: 60000,
 
   pingInterval: 25000,
-
 });
 
 setIO(io);
@@ -175,32 +166,26 @@ initSocket(io);
 const PORT = Number(process.env.PORT);
 
 async function startServer() {
-
   try {
-
     // MongoDB
     await connectDb();
 
-    console.log("MongoDB Connected");
+    console.log('MongoDB Connected');
 
     // Redis
     await redisClient.connect();
 
-    console.log("Redis Connected");
+    console.log('Redis Connected');
 
     // Start server
     server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
-
   } catch (error) {
-
-    console.error("Startup Error:", error);
+    console.error('Startup Error:', error);
 
     process.exit(1);
-
   }
-
 }
 
 startServer();
@@ -208,31 +193,23 @@ startServer();
 // ================= GRACEFUL SHUTDOWN =================
 
 async function gracefulShutdown(signal) {
-
   console.log(`${signal} received`);
 
   try {
-
     await redisClient.quit();
 
     server.close(() => {
-
-      console.log("HTTP Server Closed");
+      console.log('HTTP Server Closed');
 
       process.exit(0);
-
     });
-
   } catch (error) {
-
-    console.error("Shutdown Error:", error);
+    console.error('Shutdown Error:', error);
 
     process.exit(1);
-
   }
-
 }
 
-process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
-process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));

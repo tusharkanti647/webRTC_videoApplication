@@ -1,6 +1,4 @@
-
-
-import nodemailer from "nodemailer";
+import nodemailer from 'nodemailer';
 
 // Function to send an invite email to a user
 // `to`        -> receiver email address
@@ -30,8 +28,8 @@ export async function sendInviteEmail(to, { joinUrl, name }) {
       `,
     });
 
-    console.log("Email sent successfully");
+    console.log('Email sent successfully');
   } catch (err) {
-    console.error("Email send failed:", err);
+    console.error('Email send failed:', err);
   }
 }

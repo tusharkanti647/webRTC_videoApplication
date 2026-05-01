@@ -82,8 +82,6 @@ The application will open in your default browser at `http://localhost:3000`
 npm run build
 ```
 
-
-
 ## Core Components
 
 ### Landing Page
@@ -109,9 +107,8 @@ npm run build
 - User list
 - Stream controls
 - Leave room functionality
-- mute and video off self 
+- mute and video off self
 - host kik user and mute
-
 
 ### Socket Provider
 
@@ -154,19 +151,17 @@ check backend README.md file
 - `@mui/icons-material` - Material UI icons
 - `@mui/material` - Material UI core components
 - `axios` - HTTP client for API requests
-- `@react-oauth/google`  – Google OAuth authentication
+- `@react-oauth/google` – Google OAuth authentication
 - `react-router` – Core routing utilities
 - CSS Modules - Component styling
 
 3. **Configure environment variables**
    This project uses environment variables to manage configuration such as
-   google authentycat client id and secret,  frontend URL, backend url.
+   google authentycat client id and secret, frontend URL, backend url.
 
 Follow the steps below to configure the `.env` file correctly.
 
 batter understand check the `.env.example` file
-
-
 
 ## Common Issues
 
@@ -195,9 +190,6 @@ batter understand check the `.env.example` file
 - Optimize video stream quality
 - Implement lazy loading for routes
 
-
-
-
 ## Building for Production
 
 ```bash
@@ -212,6 +204,3 @@ This creates an optimized production build in the `build/` directory.
 2. Deploy to hosting service (Vercel, Netlify, GitHub Pages, etc.)
 3. Update `REACT_APP_API_URL` for production backend
 4. Configure domain in Google OAuth settings
-
-
-

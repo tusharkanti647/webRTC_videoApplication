@@ -44,8 +44,16 @@ webRTC_videoApplication/
 ### Start the application
 From the **project root**:
 
+for window dev server start
 ```bash
+$env:MODE="development"
 docker compose up --build
+```
+
+for window productionstart
+```bash
+$env:MODE="production"
+docker compose up --build -d
 ```
 
 **Access the app**

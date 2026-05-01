@@ -11,50 +11,58 @@ This backend is built with Node.js, Express, MongoDB, and integrates smoothly wi
 ## Features
 
 1. User Authentication and Management
- - Register new users using email/password or Google OAuth.
- - Login and logout functionality with secure JWT cookies.
- - Authentication checks for protected routes.
- - Persistent session management with cookie-based tokens.
- - Easy integration for frontend login and signup flows.
+
+- Register new users using email/password or Google OAuth.
+- Login and logout functionality with secure JWT cookies.
+- Authentication checks for protected routes.
+- Persistent session management with cookie-based tokens.
+- Easy integration for frontend login and signup flows.
 
 2. Room Creation and Management
- - Users can create rooms and invite others via email.
- - Automatic generation of unique room join URLs.
- - Stores host and participant information in MongoDB.
- - Fetch room details for frontend display.
+
+- Users can create rooms and invite others via email.
+- Automatic generation of unique room join URLs.
+- Stores host and participant information in MongoDB.
+- Fetch room details for frontend display.
 
 3. Real-Time Communication with Socket.IO
- - Real-time updates for audio/video status.
- - Hosts can mute or kick participants instantly.
- - Emits socket events to synchronize room state across all clients.
- - Handles WebRTC signaling and participant connection management.
+
+- Real-time updates for audio/video status.
+- Hosts can mute or kick participants instantly.
+- Emits socket events to synchronize room state across all clients.
+- Handles WebRTC signaling and participant connection management.
 
 4. Host Controls
- - Only the host can mute or kick participants.
- - Host actions emit real-time updates to participants.
- - Maintains participant state (e.g., audio enabled/disabled) in the database.
- - Improves meeting control and security.
+
+- Only the host can mute or kick participants.
+- Host actions emit real-time updates to participants.
+- Maintains participant state (e.g., audio enabled/disabled) in the database.
+- Improves meeting control and security.
 
 5. Email Notifications
- - Send room join links to invited participants via email.
- - Customizable email content for invitations.
- - Facilitates easier onboarding for new users in a room.
+
+- Send room join links to invited participants via email.
+- Customizable email content for invitations.
+- Facilitates easier onboarding for new users in a room.
 
 6. User Profile Management
- - Stores user information such as name, email, and authentication method.
- - Supports updating and retrieving user data securely.
- - Tracks user session with JWT token verification.
+
+- Stores user information such as name, email, and authentication method.
+- Supports updating and retrieving user data securely.
+- Tracks user session with JWT token verification.
 
 7. Secure and Scalable Architecture
- - Built with Express.js for robust routing.
- - MongoDB for flexible and scalable data storage.
- - Socket.IO for efficient real-time communication.
- - Follows RESTful API design principles for easy frontend integration.
+
+- Built with Express.js for robust routing.
+- MongoDB for flexible and scalable data storage.
+- Socket.IO for efficient real-time communication.
+- Follows RESTful API design principles for easy frontend integration.
 
 8. Developer-Friendly
- - Clean code structure with controllers, routes, and middleware separation.
- - Detailed API endpoints documented with request and response examples.
- - Easily extendable for new features like chat, screen sharing, or analytics.
+
+- Clean code structure with controllers, routes, and middleware separation.
+- Detailed API endpoints documented with request and response examples.
+- Easily extendable for new features like chat, screen sharing, or analytics.
 
 ## Prerequisites
 

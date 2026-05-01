@@ -38,7 +38,7 @@
   font-size: 1.9rem;
 }
 
-.landingMainContainer > div:nth-child(1) div[role="button"] {
+.landingMainContainer > div:nth-child(1) div[role='button'] {
   background-color: #007bff;
   width: fit-content;
   padding: 1rem;
@@ -46,7 +46,7 @@
   margin-top: 2rem;
 }
 
-.landingMainContainer > div:nth-child(1) div[role="button"] a {
+.landingMainContainer > div:nth-child(1) div[role='button'] a {
   text-decoration: none;
   color: #fff;
   font-size: 1.7rem;
