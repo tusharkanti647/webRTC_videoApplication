@@ -1,8 +1,7 @@
 // import express from 'express';
 import express from 'express';
-import { login, logOut, register, authCheck } from '../controllers/userControllers.js';
-import isAuthenticated from '../middlewares/authenticated.js';
-import { googleLogin } from '../controllers/userControllers.js';
+import { login, googleLogin, logOut, register, authCheck } from '../controllers/userControllers.js';
+import isAuthenticated from '../../../middlewares/authenticated.js';
 
 const router = express.Router();
 

@@ -1,6 +1,5 @@
-import Room from '../models/room.model.js';
-import { getIO, disconnectSocket, emitToSocket } from '../socket/socketManager.js';
-import roomModel from '../models/room.model.js';
+import Room from '../../room/models/room.model.js';
+import { getIO, disconnectSocket, emitToSocket } from '../../../socket/socketManager.js';
 
 export async function hostMute(req, res) {
   const { id } = req.params; // room id
@@ -28,7 +27,7 @@ export async function hostMute(req, res) {
   // emit force-mute to socket
   try {
     // update participant flag in DB
-    await roomModel.findOneAndUpdate(
+    await Room.findOneAndUpdate(
       { _id: id, 'participants.socketId': socketId },
       { $set: { 'participants.$.audioEnabled': false } },
       { new: true },
@@ -38,7 +37,7 @@ export async function hostMute(req, res) {
     emitToSocket(socketId, 'force-mute', { reason: 'muted by host' });
 
     // notify all participants about the change so UI can update
-    const updatedRoom = await roomModel.findById(id);
+    const updatedRoom = await Room.findById(id);
     if (updatedRoom) {
       updatedRoom.participants.forEach((p) => {
         emitToSocket(p.socketId, 'participant-updated', {
@@ -63,7 +62,7 @@ export async function hostKick(req, res) {
     return res.status(401).json({ error: 'not authenticated' });
   }
 
-  const room = await roomModel.findById(id);
+  const room = await Room.findById(id);
   if (!room) {
     return res.status(404).json({ error: 'room not found' });
   }
@@ -79,7 +78,7 @@ export async function hostKick(req, res) {
   }
 
   try {
-    await roomModel.findOneAndUpdate(
+    await Room.findOneAndUpdate(
       { _id: id },
       { $pull: { participants: { socketId } } },
       { new: true },
@@ -94,7 +93,7 @@ export async function hostKick(req, res) {
     });
 
     // notify all participants about the change so UI can update
-    const updatedRoom = await roomModel.findById(id);
+    const updatedRoom = await Room.findById(id);
     if (updatedRoom) {
       updatedRoom.participants.forEach((p) => {
         emitToSocket(p.socketId, 'kick-user-byHost', {

@@ -1,5 +1,5 @@
 import Room from '../models/room.model.js';
-import { sendInviteEmail } from '../utils/email.js';
+import { sendInviteEmail } from '../../../utils/email.js';
 
 /*
 create a rome by user when he only a login user

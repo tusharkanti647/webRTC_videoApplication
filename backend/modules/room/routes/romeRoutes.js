@@ -1,8 +1,8 @@
 import { Router } from 'express';
 
-import { createRoom } from '../controllers/roomController.js';
-import isAuthenticated from '../middlewares/authenticated.js';
-import { hostKick, hostMute } from '../controllers/hostController.js';
+import isAuthenticated from '../../../middlewares/authenticated.js';
+import { createRoom } from '../controllewares/roomController.js';
+import { hostKick, hostMute } from '../../user/controllers/hostController.js';
 
 const router = Router();
 

@@ -14,8 +14,8 @@ import { Server } from 'socket.io';
 import connectDb from './db/db.js';
 import redisClient from './db/redis.js';
 
-import userRoute from './routes/userRoutes.js';
-import roomsRoute from './routes/romeRoutes.js';
+import userRoute from './modules/user/routes/userRoutes.js';
+import roomsRoute from './modules/room/routes/romeRoutes.js';
 
 import { setIO } from './socket/socketManager.js';
 import { initSocket } from './socket/socket.js';

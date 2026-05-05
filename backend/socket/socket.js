@@ -1,4 +1,4 @@
-import roomModel from '../models/room.model.js';
+import Room from '../modules/room/models/room.model.js';
 import { disconnectSocket } from './socketManager.js';
 
 /* ------------------------------------------------------------------
@@ -9,7 +9,7 @@ import { disconnectSocket } from './socketManager.js';
 -------------------------------------------------------------------*/
 const checkRomeIsCreated = async (romeId) => {
   try {
-    const rome = await roomModel.findById(romeId);
+    const rome = await Room.findById(romeId);
 
     if (!rome) {
       return {
@@ -24,7 +24,7 @@ const checkRomeIsCreated = async (romeId) => {
       rome,
     };
   } catch (e) {
-    throw new Error(e.message);
+    throw new Error('e.message', { cause: e });
   }
 };
 
@@ -168,7 +168,7 @@ export function initSocket(io) {
           - Notifies remaining participants
        ---------------------------------------------------------------*/
     socket.on('leave-room', async ({ roomId, userId }) => {
-      const room = await roomModel.findOneAndUpdate(
+      const room = await Room.findOneAndUpdate(
         { 'participants.socketId': socket.id },
         { $pull: { participants: { socketId: socket.id } } },
         { new: true },
@@ -203,7 +203,7 @@ export function initSocket(io) {
           return;
         }
 
-        await roomModel.updateOne(
+        await Room.updateOne(
           {
             _id: fl.rome._id,
             'participants.socketId': data.socketId,
@@ -297,7 +297,7 @@ export function initSocket(io) {
         }
 
         // Update user's video state in database
-        await roomModel.updateOne(
+        await Room.updateOne(
           {
             _id: fl.rome._id,
             'participants.socketId': socket.id,
@@ -361,7 +361,7 @@ export function initSocket(io) {
           return;
         }
 
-        const result = await roomModel.updateOne(
+        const result = await Room.updateOne(
           {
             _id: fl.rome._id,
             'participants.socketId': socket.id,
@@ -413,7 +413,7 @@ export function initSocket(io) {
           - Notifies remaining users
        ---------------------------------------------------------------*/
     socket.on('disconnect', async () => {
-      const room = await roomModel.findOneAndUpdate(
+      const room = await Room.findOneAndUpdate(
         { 'participants.socketId': socket.id },
         { $pull: { participants: { socketId: socket.id } } },
         { new: true },
