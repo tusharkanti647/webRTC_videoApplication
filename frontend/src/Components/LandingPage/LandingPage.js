@@ -17,6 +17,8 @@ export default function LandingPage() {
   const [emailValue, setEmailValue] = useState('');
   const [romeValue, setRomeValue] = useState('');
   const [inviteEmails, setInviteEmails] = useState([]);
+  const [date, setDate] = useState(null);
+  const [time, setTime] = useState(null);
   const [romeDetails, setRomeDetails] = useState({ romeId: '', joinUrl: '' });
 
   //join a video call
@@ -70,18 +72,43 @@ export default function LandingPage() {
     setEmailValue('');
   };
 
+  const validateDateTime = (dateValue, timeValue) => {
+    if (!dateValue || !timeValue) {
+      return { valid: true, message: 'no time', startTime: null };
+    }
+
+    const [year, month, day] = dateValue.split('-');
+    const [hour, minute] = timeValue.split(':');
+
+    const selected = new Date(year, month - 1, day, hour, minute);
+    const now = new Date();
+
+    if (selected < now) {
+      return { valid: false, message: 'Past date/time not allowed' };
+    }
+    return { valid: true, message: 'Valid date & time', startTime: selected };
+  };
   //post to the server to generate the rome link
   //only login user can generate the link
   const handelGenerateLink = async () => {
     try {
+      const validetor = validateDateTime(date, time);
+      if (!validetor.valid) {
+        alert('invalid date and time less time from current time');
+        return;
+      }
       const myUrl = process.env.REACT_APP_API_HOST + '/roomsApi/create';
 
       const response = await axios.post(
         myUrl,
         // "http://localhost:8000/roomsApi/create",
         {
-          inviteEmails: inviteEmails,
           romeName: romeValue,
+          participants: inviteEmails,
+          // description: ,
+          startTime: validetor.startTime,
+          // endTime: z.string().datetime().optional(),
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         },
         {
           withCredentials: true,
@@ -93,8 +120,8 @@ export default function LandingPage() {
 
       console.log('Room created successfully:', response, response.data);
 
-      if (response.status == 200) {
-        const { romeId, joinUrl } = response.data;
+      if (response.status == 201) {
+        const { romeId, joinUrl } = response.data.data;
         setRomeDetails({ romeId, joinUrl });
       } else {
         alert('some thing with wrong, tray again');
@@ -249,6 +276,25 @@ export default function LandingPage() {
                       variant="outlined"
                       value={romeValue}
                     />
+                    <TextField
+                      label="Select Date"
+                      type="date"
+                      InputLabelProps={{ shrink: true }}
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      // error={!!error}
+                    />
+
+                    <TextField
+                      label="Select Time"
+                      type="time"
+                      InputLabelProps={{ shrink: true }}
+                      value={time}
+                      onChange={(e) => setTime(e.target.value)}
+                      // error={!!error}
+                      // helperText={error}
+                    />
+
                     <TextField
                       onChange={(e) => setEmailValue(e.target.value)}
                       id="outlined-basic"

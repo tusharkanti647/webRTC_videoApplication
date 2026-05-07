@@ -50,11 +50,11 @@ const RoomSchema = new Schema(
       required: true,
     },
 
-    roomId: {
-      type: String,
-      unique: true,
-      index: true,
-    },
+    // roomId: {
+    //   type: String,
+    //   unique: true,
+    //   index: true,
+    // },
 
     status: {
       type: String,

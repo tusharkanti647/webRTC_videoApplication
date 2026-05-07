@@ -1,5 +1,5 @@
 import Room from '../models/room.model.js';
-import { sendInviteEmail } from '../../../utils/email.js';
+// import { sendInviteEmail } from '../../../utils/email.js';
 
 /*
 create a rome by user when he only a login user
@@ -9,32 +9,62 @@ this controller take inviteEmails and  from  req.body;
 it return to forontend romeId, joinUrl, hostedId
 
 */
-export async function createRoom(req, res) {
-  const { inviteEmails, romeName } = req.body;
+export const createRoom = async (req, res, next) => {
   try {
-    const hostId = req?.id; //this host user id
+    const { inviteEmails = [], romeName, description, startTime, endTime, timezone } = req.body;
+
+    const hostId = req?.id;
+
     if (!hostId) {
-      return res.status(401).json({ error: 'not authenticated' });
+      return res.status(401).json({ error: 'Not authenticated' });
     }
 
-    if (!romeName || !romeName.trim()) {
-      return res.status(400).json({
-        error: 'Room name is required',
-      });
+    // Normalize & convert to Date (UTC safe)
+    const start = new Date(startTime);
+    // const end = new Date(endTime);
+
+    // Business validation (extra safety beyond Zod)
+    // if (start >= end) {
+    //   return res.status(400).json({ error: 'End time must be after start time' });
+    // }
+
+    if (start < new Date()) {
+      return res.status(400).json({ error: 'Past time not allowed' });
     }
 
-    const room = await Room.create({ hostId, romeName });
+    //Create room
+    const room = await Room.create({
+      title: romeName.trim(),
+      description: description?.trim(),
+      host: hostId,
+      startTime: start,
+      // endTime: end,
+      timezone,
+      status: 'scheduled',
+      participants: inviteEmails,
+    });
+
     const joinUrl = `${process.env.FRONTEND_BASE_URL || 'http://localhost:3000'}/join/${room._id}`;
 
-    // optionally send emails
-    if (Array.isArray(inviteEmails)) {
-      inviteEmails.forEach((email) => sendInviteEmail(email, { joinUrl, name: romeName }));
-    }
-    res.json({ romeId: room._id, joinUrl, hostId });
-  } catch (err) {
-    res.status(500).json({ error: 'cannot create room' });
+    // Send emails (non-blocking, production safe)
+    // if (inviteEmails.length) {
+    //   Promise.allSettled(
+    //     inviteEmails.map((email) => sendInviteEmail(email, { joinUrl, name: romeName })),
+    //   );
+    // }
+
+    return res.status(201).json({
+      success: true,
+      data: {
+        roomId: room._id,
+        joinUrl,
+        hostId,
+      },
+    });
+  } catch (error) {
+    next(error); // 🔥 centralized error handler
   }
-}
+};
 
 export async function getRoom(req, res) {
   const { id } = req.params;
