@@ -17,6 +17,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@bull-board/api": "^7.0.0",
+    "@bull-board/express": "^7.0.0",
     "bcryptjs": "^2.4.3",
     "bullmq": "^5.76.5",
     "compression": "^1.8.1",

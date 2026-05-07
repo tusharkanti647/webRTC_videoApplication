@@ -1,7 +1,13 @@
 import { createClient } from 'redis';
 
+const redisUrl =
+  process.env.REDIS_URL ||
+  `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || 6379}`;
+
+console.log('Connecting to Redis:', redisUrl);
+
 const redisClient = createClient({
-  url: process.env.REDIS_URL,
+  url: redisUrl,
 });
 
 redisClient.on('connect', () => {

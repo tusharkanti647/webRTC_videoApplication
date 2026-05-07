@@ -20,6 +20,7 @@ import roomsRoute from './modules/room/routes/romeRoutes.js';
 import { setIO } from './socket/socketManager.js';
 import { initSocket } from './socket/socket.js';
 import { rateLimiter } from './middlewares/tokenBucketLimiter.js';
+import { emailQueue } from './modules/services/queues/email.queue.js';
 
 dotenv.config();
 
@@ -188,7 +189,57 @@ async function startServer() {
   }
 }
 
+// ===============================
+//bull mq
+
+// import { createBullBoard } from '@bull-board/api';
+// import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+// import { ExpressAdapter } from '@bull-board/express';
+
+// // import { emailQueue } from './queues/email.queue.js';
+
+// const serverAdapter = new ExpressAdapter();
+
+// serverAdapter.setBasePath('/admin/queues');
+
+// createBullBoard({
+//   queues: [new BullMQAdapter(emailQueue)],
+//   serverAdapter,
+// });
+
+// export default serverAdapter;
+// app.use('/admin/queues', serverAdapter.getRouter());
+//=================================
+
 startServer();
+
+// const imiSend = () => {
+//   emailQueue.add('sendEmail', {
+//     to: 'tusharkanti647@gmail.com',
+//     subject: 'Room Invite',
+//     html: '<h1>Hello</h1>',
+//   });
+// };
+
+// const laterSend = () => {
+//   emailQueue.add(
+//     'scheduledEmail',
+//     {
+//       to: 'tusharkanti647@gmail.com',
+//       subject: 'Meeting Reminder',
+//       html: '<h1>Reminder</h1>',
+//     },
+
+//     {
+//       delay: 1000 * 60 * 2,
+//     },
+//   );
+// };
+
+// setTimeout(() => {
+//   imiSend();
+//   laterSend();
+// }, 10000);
 
 // ================= GRACEFUL SHUTDOWN =================
 

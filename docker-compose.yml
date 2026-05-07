@@ -1,7 +1,4 @@
-version: "3.8"
-
 services:
-
   # =========================
   # FRONTEND
   # =========================
@@ -27,7 +24,6 @@ services:
 
     restart: unless-stopped
 
-
   # =========================
   # BACKEND
   # =========================
@@ -41,14 +37,20 @@ services:
     ports:
       - "8000:8000"
 
+    env_file:
+      - ./backend/.env
+
     environment:
       - NODE_ENV=${MODE}
       - MONGO_URI=mongodb://db:27017/webRTC_video_app
       - REDIS_URL=redis://redis:6379
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
 
     depends_on:
       - db
       - redis
+      - email_ervice
 
     # Development only
     volumes:
@@ -57,6 +59,33 @@ services:
 
     restart: unless-stopped
 
+  # ================================
+  # emsil service server
+  # ============================
+  email_ervice:
+    build: ./emailService
+
+    container_name: emailService
+
+    ports:
+      - "8010:8010"
+
+    env_file:
+      - ./emailService/.env
+
+    environment:
+      - NODE_ENV=${MODE}
+      - REDIS_URL=redis://redis:6379
+
+    volumes:
+      - ./emailService:/app
+      - /app/node_modules
+
+    restart: unless-stopped
+
+    depends_on:
+      - db
+      - redis
 
   # =========================
   # MONGODB
@@ -74,7 +103,6 @@ services:
 
     restart: unless-stopped
 
-
   # =========================
   # REDIS
   # =========================
@@ -90,7 +118,6 @@ services:
       - redis_data:/data
 
     restart: unless-stopped
-
 
 volumes:
   mongodb_data:
