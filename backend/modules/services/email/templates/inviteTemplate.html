@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #f4f7fb;
+        font-family: Arial, sans-serif;
+        color: #333333;
+      }
+
+      .container {
+        max-width: 650px;
+        margin: 30px auto;
+        background: #ffffff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+      }
+
+      .header {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        padding: 30px;
+        text-align: center;
+        color: white;
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 28px;
+      }
+
+      .content {
+        padding: 35px;
+      }
+
+      .meeting-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+      }
+
+      .meeting-row {
+        margin-bottom: 14px;
+      }
+
+      .label {
+        font-weight: bold;
+        color: #0f172a;
+      }
+
+      .description-box {
+        margin-top: 20px;
+        background: #f1f5f9;
+        padding: 15px;
+        border-radius: 8px;
+        line-height: 1.6;
+      }
+
+      .join-button {
+        display: inline-block;
+        margin-top: 30px;
+        background: #2563eb;
+        color: white !important;
+        text-decoration: none;
+        padding: 14px 28px;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 16px;
+      }
+
+      .join-button:hover {
+        background: #1d4ed8;
+      }
+
+      .manual-join {
+        margin-top: 30px;
+        padding: 18px;
+        background: #fff7ed;
+        border: 1px solid #fdba74;
+        border-radius: 10px;
+      }
+
+      .room-id {
+        font-size: 22px;
+        font-weight: bold;
+        color: #ea580c;
+        letter-spacing: 1px;
+        margin-top: 10px;
+      }
+
+      .footer {
+        background: #f8fafc;
+        padding: 25px;
+        text-align: center;
+        font-size: 13px;
+        color: #64748b;
+        line-height: 1.6;
+      }
+
+      .security-note {
+        margin-top: 25px;
+        padding: 15px;
+        background: #eff6ff;
+        border-left: 4px solid #2563eb;
+        border-radius: 6px;
+        font-size: 14px;
+        color: #1e3a8a;
+      }
+
+      @media only screen and (max-width: 600px) {
+        .content {
+          padding: 20px;
+        }
+
+        .header h1 {
+          font-size: 22px;
+        }
+
+        .join-button {
+          width: 100%;
+          text-align: center;
+          box-sizing: border-box;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Meeting Invitation</h1>
+        <p>You have been invited to join a meeting</p>
+      </div>
+
+      <div class="content">
+        <p>Hello,</p>
+
+        <p>
+          You are invited to participate in the following meeting. Please review the meeting details
+          below and join at the scheduled time.
+        </p>
+
+        <div class="meeting-card">
+          <div class="meeting-row">
+            <span class="label">Room Name:</span>
+            {{ROOM_NAME}}
+          </div>
+
+          <div class="meeting-row">
+            <span class="label">Host Name:</span>
+            {{HOST_NAME}}
+          </div>
+
+          <div class="meeting-row">
+            <span class="label">Room ID:</span>
+            {{ROOM_ID}}
+          </div>
+
+          <div class="meeting-row">
+            <span class="label">Meeting Date:</span>
+            {{MEETING_DATE}}
+          </div>
+
+          <div class="meeting-row">
+            <span class="label">Meeting Time:</span>
+            {{MEETING_TIME}}
+          </div>
+
+          <div class="meeting-row">
+            <span class="label">Timezone:</span>
+            {{TIMEZONE}}
+          </div>
+        </div>
+
+        <div class="description-box">
+          <span class="label">Meeting Description:</span>
+          <p>{{DESCRIPTION}}</p>
+        </div>
+
+        <center>
+          <a href="{{JOIN_URL}}" class="join-button"> Join Meeting </a>
+        </center>
+
+        <div class="manual-join">
+          <strong>Alternative Joining Method</strong>
+
+          <p>If the button above does not work, you can manually join using the Room ID below:</p>
+
+          <div class="room-id">{{ROOM_ID}}</div>
+
+          <p>Open the application and enter this Room ID to join the meeting.</p>
+        </div>
+
+        <div class="security-note">
+          For security purposes, please do not share this meeting link or Room ID with unauthorized
+          users.
+        </div>
+      </div>
+
+      <div class="footer">
+        This is an automated email notification.<br />
+        Please do not reply directly to this email.<br /><br />
+
+        © 2026 Video Meeting Platform. All rights reserved.
+      </div>
+    </div>
+  </body>
+</html>

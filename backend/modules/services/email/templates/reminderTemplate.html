@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background: #f4f7fb;
+        font-family: Arial, sans-serif;
+        color: #333;
+      }
+
+      .container {
+        max-width: 650px;
+        margin: 30px auto;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+      }
+
+      .header {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 28px;
+      }
+
+      .content {
+        padding: 35px;
+      }
+
+      .alert-box {
+        background: #fef2f2;
+        border: 1px solid #fca5a5;
+        padding: 18px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        color: #991b1b;
+        font-weight: bold;
+      }
+
+      .meeting-details {
+        background: #f8fafc;
+        border-radius: 10px;
+        padding: 20px;
+        border: 1px solid #e2e8f0;
+      }
+
+      .row {
+        margin-bottom: 14px;
+      }
+
+      .label {
+        font-weight: bold;
+        color: #0f172a;
+      }
+
+      .join-button {
+        display: inline-block;
+        margin-top: 30px;
+        background: #dc2626;
+        color: white !important;
+        text-decoration: none;
+        padding: 14px 28px;
+        border-radius: 8px;
+        font-weight: bold;
+      }
+
+      .manual {
+        margin-top: 30px;
+        background: #fff7ed;
+        border: 1px solid #fdba74;
+        border-radius: 10px;
+        padding: 18px;
+      }
+
+      .room-id {
+        font-size: 22px;
+        font-weight: bold;
+        color: #ea580c;
+        margin-top: 10px;
+      }
+
+      .footer {
+        background: #f8fafc;
+        padding: 25px;
+        text-align: center;
+        font-size: 13px;
+        color: #64748b;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Meeting Reminder</h1>
+        <p>Your meeting will start soon</p>
+      </div>
+
+      <div class="content">
+        <div class="alert-box">Reminder: Your meeting starts in 5 minutes.</div>
+
+        <p>Hello,</p>
+
+        <p>This is a reminder for your upcoming meeting. Please join using the button below.</p>
+
+        <div class="meeting-details">
+          <div class="row">
+            <span class="label">Room Name:</span>
+            {{ROOM_NAME}}
+          </div>
+
+          <div class="row">
+            <span class="label">Host Name:</span>
+            {{HOST_NAME}}
+          </div>
+
+          <div class="row">
+            <span class="label">Room ID:</span>
+            {{ROOM_ID}}
+          </div>
+
+          <div class="row">
+            <span class="label">Date:</span>
+            {{MEETING_DATE}}
+          </div>
+
+          <div class="row">
+            <span class="label">Time:</span>
+            {{MEETING_TIME}}
+          </div>
+
+          <div class="row">
+            <span class="label">Timezone:</span>
+            {{TIMEZONE}}
+          </div>
+        </div>
+
+        <center>
+          <a href="{{JOIN_URL}}" class="join-button"> Join Meeting Now </a>
+        </center>
+
+        <div class="manual">
+          <strong>Manual Join Using Room ID</strong>
+
+          <div class="room-id">{{ROOM_ID}}</div>
+
+          <p>You can also open the application and manually enter this Room ID.</p>
+        </div>
+      </div>
+
+      <div class="footer">
+        Automated Meeting Reminder Email<br /><br />
+        © 2026 Video Meeting Platform
+      </div>
+    </div>
+  </body>
+</html>

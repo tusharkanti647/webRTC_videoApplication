@@ -63,7 +63,8 @@ const RoomSchema = new Schema(
       index: true,
     },
     participants: {
-      type: [Schema.Types.ObjectId],
+      // type: [Schema.Types.ObjectId],
+      type: [String],
       default: [],
     },
   },

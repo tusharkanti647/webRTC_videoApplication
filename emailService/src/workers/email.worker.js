@@ -5,7 +5,7 @@ import { sendEmail } from "../services/email.service.js";
 
 // Parse REDIS_URL into connection object
 const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
-const url = new URL(redisUrl);
+const url = new URL("redis://localhost:6379");
 
 const redisConnection = {
   host: url.hostname,
